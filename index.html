@@ -21,6 +21,20 @@
     .btn-registros:hover {
       background-color: #ff0019;
     }
+    .qr-personalizado {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .qr-personalizado h3 {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+    .qr-personalizado img {
+      border: 2px solid #444;
+      border-radius: 10px;
+      padding: 8px;
+    }
   </style>
 </head>
 <body>
@@ -37,7 +51,6 @@
       <ul id="menu-items"></ul>
     </nav>
     <button id="btn-registros" class="btn-registros" data-i18n="registro-resumen">Resumen de Registros</button>
-    <button id="btn-opiniones" class="btn-registros" data-i18n="opiniones">Opiniones</button>
 
     <div class="idioma-selector">
       <select id="idioma">
@@ -77,22 +90,13 @@
         <button type="submit" class="btn-registrar">Registrar</button>
       </form>
 
-      <!-- Aquí se muestra el QR -->
-      <h3 style="margin-top: 20px;">Valora nuestro servicio escaneando el QR:</h3>
-      <div id="qr"></div>
+      <!-- Aquí se muestra tu QR personalizado -->
+      <div class="qr-personalizado">
+        <h3>Escanea para dejarnos tu opinión:</h3>
+        <img src="frame.png" alt="QR de opiniones" width="200" height="200">
+      </div>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <script>
-    // Usa IP local directamente
-    const urlOpiniones = "http://192.168.1.42/opiniones.html";
-    new QRCode(document.getElementById("qr"), {
-      text: urlOpiniones,
-      width: 200,
-      height: 200
-    });
-  </script>
 
   <script>
     function actualizarReloj() {
@@ -123,8 +127,7 @@
         vehiculos: "Vehículos",
         bienvenida: "Bienvenido al Gestor de Stock del Taller",
         cerrar_sesion: "Cerrar sesión",
-        registros_resumen: "Resumen de Registros",
-        opiniones: "Opiniones"
+        registros_resumen: "Resumen de Registros"
       },
       en: {
         titulo: "Workshop Stock",
@@ -134,8 +137,7 @@
         vehiculos: "Vehicles",
         bienvenida: "Welcome to the Workshop Stock Manager",
         cerrar_sesion: "Log out",
-        registros_resumen: "Records Summary",
-        opiniones: "Feedback"
+        registros_resumen: "Records Summary"
       },
       it: {
         titulo: "Magazzino Officina",
@@ -145,8 +147,7 @@
         vehiculos: "Veicoli",
         bienvenida: "Benvenuto nel Gestore Magazzino dell'Officina",
         cerrar_sesion: "Disconnettersi",
-        registros_resumen: "Riepilogo Registri",
-        opiniones: "Opinioni"
+        registros_resumen: "Riepilogo Registri"
       }
     };
 
@@ -177,10 +178,6 @@
       window.location.href = "registros-resumen.html";
     });
 
-    document.getElementById("btn-opiniones").addEventListener("click", () => {
-      window.location.href = "opiniones.html";
-    });
-
     window.onload = function () {
       const rol = localStorage.getItem("rolUsuario");
 
@@ -201,7 +198,9 @@
           <li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>
         `;
       } else if (rol === "Mecanico") {
-        menu.innerHTML = `<li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>`;
+        menu.innerHTML = `
+          <li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>
+        `;
       } else {
         bienvenida.textContent = "Rol no válido. Contacte al administrador.";
         menu.innerHTML = "";
