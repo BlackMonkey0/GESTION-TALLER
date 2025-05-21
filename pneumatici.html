@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mapa y Excel</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- SheetJS (XLSX) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .barra-superior {
+      background-color: red;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .barra-superior button {
+      background: white;
+      color: red;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #mapa {
+      height: 500px;
+      width: 85%;
+      max-width: 1000px;
+      margin: 20px auto;
+      border: 4px solid red;
+      border-radius: 8px;
+    }
+
+    .tabla-dinamica {
+      border-collapse: collapse;
+      width: 90%;
+      margin: 20px auto;
+    }
+
+    .tabla-dinamica th, .tabla-dinamica td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+
+    .tabla-dinamica th {
+      background-color: #f2f2f2;
+    }
+
+    #inputArchivo, #buscador, #guardarDatos {
+      margin: 10px;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="barra-superior">
+    <a href="index.html">
+      <button>Regresar al inicio</button>
+    </a>
+  </div>
+
+  <div id="mapa"></div>
+
+  <h1>Visualizador de Proveedores</h1>
+
+  <input type="file" id="inputArchivo" accept=".xlsx, .xls" />
+  <input type="text" id="buscador" placeholder="Buscar zona (ej. Roma, Milano...)" />
+  <button id="guardarDatos">Guardar en LocalStorage</button>
+
+  <div id="contenedor-tablas"></div>
+
+  <script>
+    let todosLosDatos = [];
+    let mapa;
+    let grupoMarcadores;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("inputArchivo").addEventListener("change", manejarArchivos);
+      document.getElementById("buscador").addEventListener("input", aplicarBusqueda);
+      document.getElementById("guardarDatos").addEventListener("click", guardarDatosEnLocalStorage);
+
+      mapa = L.map("mapa").setView([40.4168, -3.7038], 6); // Madrid
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors"
+      }).addTo(mapa);
+
+      grupoMarcadores = L.layerGroup().addTo(mapa);
+
+      const guardados = localStorage.getItem("datosProveedores");
+      if (guardados) {
+        try {
+          todosLosDatos = JSON.parse(guardados);
+          renderizarDatos(todosLosDatos);
+          colocarMarcadoresEnMapa(todosLosDatos);
+        } catch (e) {
+          console.error("Error al cargar datos guardados", e);
+        }
+      }
+    });
+
+    function manejarArchivos(event) {
+      const archivo = event.target.files[0];
+      if (!archivo) return;
+
+      todosLosDatos = [];
+      grupoMarcadores.clearLayers();
+      document.getElementById("contenedor-tablas").innerHTML = "";
+
+      const lector = new FileReader();
+      lector.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const hoja = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(hoja);
+
+        todosLosDatos = json;
+        renderizarDatos(todosLosDatos);
+        colocarMarcadoresEnMapa(todosLosDatos);
+      };
+      lector.readAsArrayBuffer(archivo);
+    }
+
+    function guardarDatosEnLocalStorage() {
+      if (todosLosDatos.length > 0) {
+        localStorage.setItem("datosProveedores", JSON.stringify(todosLosDatos));
+        alert("Datos guardados correctamente ✅");
+      } else {
+        alert("No hay datos para guardar.");
+      }
+    }
+
+    function renderizarDatos(datos) {
+      const contenedor = document.getElementById("contenedor-tablas");
+      contenedor.innerHTML = "";
+
+      if (datos.length === 0) {
+        contenedor.innerHTML = "<p>No hay datos para mostrar.</p>";
+        return;
+      }
+
+      const columnas = Object.keys(datos[0]);
+      const tabla = document.createElement("table");
+      tabla.classList.add("tabla-dinamica");
+
+      tabla.innerHTML = `
+        <thead>
+          <tr>${columnas.map(col => `<th>${col}</th>`).join("")}</tr>
+        </thead>
+        <tbody>
+          ${datos.map(dato => `
+            <tr>${columnas.map(col => `<td>${dato[col] || ""}</td>`).join("")}</tr>
+          `).join("")}
+        </tbody>
+      `;
+
+      contenedor.appendChild(tabla);
+    }
+
+    function aplicarBusqueda() {
+      const valor = document.getElementById("buscador").value.toLowerCase().trim();
+
+      const filtrado = todosLosDatos.filter(d => {
+        const localidad = (d.Localidad || d.localidad || "").toLowerCase();
+        const region = (d.Region || d.region || "").toLowerCase();
+        const ciudad = (d.Ciudad || d.ciudad || "").toLowerCase();
+
+        return localidad.includes(valor) || region.includes(valor) || ciudad.includes(valor);
+      });
+
+      renderizarDatos(filtrado);
+      colocarMarcadoresEnMapa(filtrado);
+    }
+
+    function colocarMarcadoresEnMapa(datos) {
+      grupoMarcadores.clearLayers();
+
+      let primerCoordenada = null;
+
+      datos.forEach(d => {
+        const lat = parseFloat(d.Latitud || d.lat || d.latitude || d.LATITUD);
+        const lon = parseFloat(d.Longitud || d.lon || d.longitude || d.LONGITUD);
+
+        if (!isNaN(lat) && !isNaN(lon)) {
+          if (!primerCoordenada) primerCoordenada = [lat, lon];
+
+          const popup = `
+            <strong>${d.Localidad || d.Nombre || "pneumatici"}</strong><br>
+            Tel: ${d.Telefono || "-"}<br>
+            Región: ${d.Region || "-"}
+          `;
+
+          L.marker([lat, lon], {
+            icon: L.icon({
+              iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+              iconSize: [32, 32],
+              iconAnchor: [16, 32],
+              popupAnchor: [0, -32]
+            })
+          }).bindPopup(popup).addTo(grupoMarcadores);
+        }
+      });
+
+      if (primerCoordenada) {
+        mapa.setView(primerCoordenada, 7);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="titulo">Hoja de Taller</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: white; /* Fondo blanco en toda la página */
+      margin: 0;
+      padding: 0;
+    }
+
+    .header, .footer {
+      background-color: #ff1900;
+      color: white;
+      padding: 10px 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .idioma-selector select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      font-weight: bold;
+    }
+
+    .contenedor-principal {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #ff1900;
+      margin-top: 20px;
+    }
+
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin: 20px auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid hsl(0, 0%, 100%);
+      border-radius: 8px;
+    }
+
+    button {
+      margin-top: 20px;
+      background-color: #ff1900;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #e01400;
+    }
+
+    .volver {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .volver a {
+      color: #ff1900;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .botones {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .botones button {
+      flex: 1;
+      min-width: 150px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="idioma-selector">
+      <select id="idioma">
+        <option value="es">Español</option>
+        <option value="en">English</option>
+        <option value="it">Italiano</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="contenedor-principal">
+    <h1 data-i18n="titulo">Hoja de Entrada / Salida</h1>
+
+    <form id="formularioTaller">
+      <label for="matricula" data-i18n="matricula">Matrícula:</label>
+      <input type="text" id="matricula" required />
+
+      <label for="mecanico" data-i18n="mecanico">Nombre del Mecánico:</label>
+      <input type="text" id="mecanico" required />
+
+      <label for="litrosAceite" data-i18n="aceite">Litros de aceite usados:</label>
+      <input type="number" id="litrosAceite" step="0.1" min="0" />
+
+      <label for="modeloFiltro" data-i18n="filtro">Filtro utilizado (modelo):</label>
+      <input type="text" id="modeloFiltro" />
+
+      <label for="reparaciones" data-i18n="reparaciones">Otras reparaciones:</label>
+      <textarea id="reparaciones" rows="4" placeholder="Ej. Cambio de pastillas, batería..."></textarea>
+
+      <div class="botones">
+        <button type="submit" data-i18n="registrar">Registrar</button>
+        <button type="button" id="descargarPDF" data-i18n="pdf">Descargar PDF</button>
+      </div>
+    </form>
+
+    <div class="volver">
+      <a href="index.html" data-i18n="volver">← Volver al inicio</a>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>&copy; 2025 - TallerApp</p>
+  </div>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="hoja-taller.js"></script>
+
+  <!-- Traducción multilenguaje -->
+  <script>
+    const traducciones = {
+      es: {
+        titulo: "Hoja de Entrada / Salida",
+        matricula: "Matrícula:",
+        mecanico: "Nombre del Mecánico:",
+        aceite: "Litros de aceite usados:",
+        filtro: "Filtro utilizado (modelo):",
+        reparaciones: "Otras reparaciones:",
+        registrar: "Registrar",
+        pdf: "Descargar PDF",
+        volver: "← Volver al inicio"
+      },
+      en: {
+        titulo: "Check-in / Check-out Form",
+        matricula: "License Plate:",
+        mecanico: "Mechanic's Name:",
+        aceite: "Oil used (liters):",
+        filtro: "Used filter (model):",
+        reparaciones: "Other repairs:",
+        registrar: "Register",
+        pdf: "Download PDF",
+        volver: "← Return to Home"
+      },
+      it: {
+        titulo: "Scheda di Entrata / Uscita",
+        matricula: "Targa:",
+        mecanico: "Nome del Meccanico:",
+        aceite: "Litri di olio usati:",
+        filtro: "Filtro utilizzato (modello):",
+        reparaciones: "Altre riparazioni:",
+        registrar: "Registrare",
+        pdf: "Scarica PDF",
+        volver: "← Torna all'inizio"
+      }
+    };
+
+    function traducir(idioma) {
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const clave = el.getAttribute("data-i18n");
+        el.textContent = traducciones[idioma][clave] || clave;
+      });
+    }
+
+    document.getElementById("idioma").addEventListener("change", e => {
+      traducir(e.target.value);
+    });
+
+    traducir("es"); // Traducción por defecto
+  </script>
+
+  <script>
+    function registrarUsuario() {
+      const usuario = prompt("Nuevo nombre de usuario:");
+      const contrasena = prompt("Nueva contraseña:");
+      const rol = prompt("Rol (admin, usuario, etc.):");
+
+      if (!usuario || !contrasena || !rol) {
+        alert("Todos los campos son obligatorios.");
+        return;
+      }
+
+      const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+      if (usuarios.some(u => u.usuario === usuario)) {
+        alert("Ese usuario ya existe.");
+        return;
+      }
+
+      usuarios.push({ usuario, contrasena, rol });
+      localStorage.setItem("usuarios", JSON.stringify(usuarios));
+
+      alert("Usuario registrado exitosamente.");
+    }
+  </script>
+</body>
+</html>
+<!-- 
+ --><!--
+  <html lang="es"> 

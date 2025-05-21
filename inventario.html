@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventario</title>
+  <style>
+    /* Estilos generales */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding-bottom: 60px; /* espacio para el footer */
+    }
+
+    .barra-superior {
+      background-color: red;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .idioma-selector select {
+      padding: 5px;
+      border-radius: 4px;
+      border: none;
+    }
+
+    .contenedor {
+      max-width: 1000px;
+      margin: 40px auto;
+      background-color: #fff;
+      padding: 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    h1 {
+      text-align: center;
+      color: red;
+      margin-bottom: 30px;
+    }
+
+    .volver-inicio {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .volver-inicio a,
+    .btn-admin {
+      background-color: red;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+      margin: 5px;
+      display: inline-block;
+    }
+
+    .btn-admin:hover {
+      background-color: red;
+      cursor: pointer;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: red;
+      color: white;
+    }
+
+    .estado-bajo {
+      background-color: #f8d7da;
+      color: #a94442;
+      font-weight: bold;
+    }
+
+    .estado-ok {
+      background-color: #d4edda;
+      color: #155724;
+      font-weight: bold;
+    }
+
+    tfoot td {
+      font-weight: bold;
+      text-align: right;
+    }
+
+    /* Botón PDF */
+    #btn-descargar-pdf {
+      margin: 30px auto;
+      display: block;
+      padding: 10px 20px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #btn-descargar-pdf:hover {
+      background-color: red;
+    }
+
+    /* Estilos para modales */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-contenido {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 8px;
+      width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .modal-contenido h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .modal-contenido input, .modal-contenido select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+
+    .modal-contenido button {
+      width: 48%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    .cerrar {
+      background-color: #ccc;
+    }
+
+    .guardar {
+      background-color: red;
+      color: white;
+    }
+
+    .guardar:hover {
+      background-color: red;
+    }
+
+    /* Pie de página */
+    .barra-inferior {
+      background-color: red;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header class="barra-superior">
+  <span>&nbsp;</span>
+  <div class="idioma-selector">
+    <select id="idioma">
+      <option value="es">Español</option>
+      <option value="en">English</option>
+      <option value="it">Italiano</option>
+    </select>
+  </div>
+</header>
+
+<div class="contenedor">
+  <h1 id="titulo-pagina">Inventario</h1>
+
+  <div class="volver-inicio">
+    <a href="index.html">← Volver al inicio</a>
+    <button onclick="mostrarFormulario('add')" class="btn-admin">➕ Añadir elemento</button>
+    <button onclick="mostrarFormulario('remove')" class="btn-admin">➖ Restar elemento</button>
+  </div>
+
+  <table id="tabla-inventario">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Artículo</th>
+        <th>Categoría</th>
+        <th>Cantidad</th>
+        <th>Unidad</th>
+        <th>Mínimo</th>
+        <th>Estado</th>
+        <th>Precio Unitario (€)</th>
+        <th>Precio Total (€)</th>
+      </tr>
+    </thead>
+    <tbody id="tbody-inventario"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="8">Total Inventario (€):</td>
+        <td id="total-inventario">0.00</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Botón PDF -->
+  <button id="btn-descargar-pdf">📄 Descargar PDF</button>
+</div>
+
+<footer class="barra-inferior">
+  <span>&copy; 2025 Todos Los Derechos Reservados</span>
+</footer>
+
+<!-- MODAL -->
+<div class="modal" id="modal-formulario">
+  <div class="modal-contenido">
+    <h2 id="modal-titulo">Modificar Inventario</h2>
+    <select id="select-articulo"></select>
+    <input type="number" id="cantidad" placeholder="Cantidad" min="1" />
+    <div style="display: flex; justify-content: space-between;">
+      <button class="cerrar" onclick="cerrarModal()">Cancelar</button>
+      <button class="guardar" onclick="aplicarCambio()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script>
+  const datosInventario = [
+    { id: 1, nombre: 'Aceite 10W40', categoria: 'Motor', cantidad: 6, unidad: 'litros', minimo: 5, precioUnitario: 5.23 },
+    { id: 2, nombre: 'Filtro de aire', categoria: 'Filtros', cantidad: 10, unidad: 'unidades', minimo: 5, precioUnitario: 5 },
+    { id: 3, nombre: 'Neumático 205/55R16', categoria: 'Neumáticos', cantidad: 10, unidad: 'unidades', minimo: 4, precioUnitario: 60 },
+    { id: 4, nombre: 'Pastillas de freno', categoria: 'Frenos', cantidad: 10, unidad: 'juegos', minimo: 4, precioUnitario: 25 }
+  ];
+
+  let accionActual = "";
+
+  function mostrarFormulario(accion) {
+    accionActual = accion;
+    document.getElementById("modal-titulo").textContent =
+      accion === "add" ? "Añadir Elemento" : "Restar Elemento";
+
+    const select = document.getElementById("select-articulo");
+    select.innerHTML = "";
+    datosInventario.forEach(item => {
+      const opt = document.createElement("option");
+      opt.value = item.id;
+      opt.textContent = item.nombre;
+      select.appendChild(opt);
+    });
+
+    document.getElementById("cantidad").value = "";
+    document.getElementById("modal-formulario").style.display = "block";
+  }
+
+  function cerrarModal() {
+    document.getElementById("modal-formulario").style.display = "none";
+  }
+
+  function aplicarCambio() {
+    const id = parseInt(document.getElementById("select-articulo").value);
+    const cantidad = parseInt(document.getElementById("cantidad").value);
+
+    if (!cantidad || cantidad < 1) {
+      alert("Cantidad inválida");
+      return;
+    }
+
+    const item = datosInventario.find(i => i.id === id);
+    if (!item) return;
+
+    if (accionActual === "add") {
+      item.cantidad += cantidad;
+    } else if (accionActual === "remove") {
+      item.cantidad = Math.max(0, item.cantidad - cantidad);
+    }
+
+    actualizarTabla();
+    cerrarModal();
+  }
+
+  function actualizarTabla() {
+    const tbody = document.getElementById("tbody-inventario");
+    tbody.innerHTML = "";
+    let total = 0;
+
+    datosInventario.forEach(item => {
+      const row = document.createElement("tr");
+      const cantidad = item.cantidad;
+      const totalItem = cantidad * item.precioUnitario;
+      total += totalItem;
+
+      row.innerHTML = `
+        <td>${item.id}</td>
+        <td>${item.nombre}</td>
+        <td>${item.categoria}</td>
+        <td>${cantidad}</td>
+        <td>${item.unidad}</td>
+        <td>${item.minimo}</td>
+        <td class="${cantidad < item.minimo ? 'estado-bajo' : 'estado-ok'}">${cantidad < item.minimo ? 'BAJO' : 'OK'}</td>
+        <td>${item.precioUnitario.toFixed(2)}</td>
+        <td>${totalItem.toFixed(2)}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    document.getElementById("total-inventario").textContent = total.toFixed(2);
+  }
+
+  // PDF Export
+  document.getElementById("btn-descargar-pdf").addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const encabezados = [["ID", "Artículo", "Categoría", "Cantidad", "Unidad", "Mínimo", "Estado", "Precio Unit.", "Precio Total"]];
+    const cuerpo = datosInventario.map(item => [
+      item.id,
+      item.nombre,
+      item.categoria,
+      item.cantidad,
+      item.unidad,
+      item.minimo,
+      item.cantidad < item.minimo ? 'BAJO' : 'OK',
+      item.precioUnitario.toFixed(2),
+      (item.precioUnitario * item.cantidad).toFixed(2)
+    ]);
+
+    doc.text("Inventario", 14, 15);
+    doc.autoTable({
+      head: encabezados,
+      body: cuerpo,
+      startY: 20,
+      styles: { fontSize: 9, halign: 'center' },
+      headStyles: { fillColor: [231, 76, 60] }
+    });
+
+    const total = datosInventario.reduce((acc, item) => acc + item.precioUnitario * item.cantidad, 0);
+    doc.text(`Total Inventario (€): ${total.toFixed(2)}`, 14, doc.lastAutoTable.finalY + 10);
+    doc.save("inventario.pdf");
+  });
+
+  // Inicializar tabla
+  actualizarTabla();
+</script>
+
+</body>
+</html>

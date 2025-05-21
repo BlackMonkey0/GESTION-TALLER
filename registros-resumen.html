@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taller - Registro y Resumen</title>
+  <style>
+    /* Reset y base */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      margin: 0;
+      padding: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      color: #343a40;
+    }
+
+    h2 {
+      color: #dc3545;
+      border-bottom: 3px solid #dc3545;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      font-weight: 700;
+      font-size: 1.8rem;
+    }
+
+    form {
+      background: white;
+      padding: 20px 25px;
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(220, 53, 69, 0.15);
+      transition: box-shadow 0.3s ease;
+    }
+
+    form:hover {
+      box-shadow: 0 12px 24px rgba(220, 53, 69, 0.25);
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 15px;
+      font-size: 1rem;
+      color: #495057;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 8px;
+      border: 2px solid #ced4da;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      font-family: inherit;
+      color: #495057;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #dc3545;
+      box-shadow: 0 0 6px rgba(220, 53, 69, 0.5);
+      outline: none;
+    }
+
+    button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 14px 30px;
+      margin-top: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: 700;
+      box-shadow: 0 6px 10px rgba(220, 53, 69, 0.3);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #b02a37;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 18px rgba(176, 42, 55, 0.5);
+    }
+
+    #resumenVehiculos {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      margin-top: 15px;
+      white-space: pre-wrap;
+      font-family: 'Courier New', Courier, monospace;
+      color: #212529;
+      font-size: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    /* Botón Volver */
+    .btn-volver {
+      display: inline-block;
+      background-color: #ff0000;
+      color: rgb(255, 255, 255);
+      text-decoration: none;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 8px rgb(0, 0, 0);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn-volver:hover {
+      background-color: #ff0000;
+      box-shadow: 0 8px 16px rgba(73,80,87,0.5);
+    }
+
+    /* Botones adicionales */
+    .btn-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .btn-group button {
+      flex: 1;
+      padding: 12px 0;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="btn-volver">← Volver al Inicio</a>
+
+  <h2>📅 Citas y Recordatorios</h2>
+  <form id="formCita">
+    <label for="matriculaCita">Matrícula del vehículo:</label>
+    <input type="text" id="matriculaCita" required />
+
+    <label for="modeloCita">Modelo del vehículo:</label>
+    <input type="text" id="modeloCita" required />
+
+    <label for="fechaCita">Fecha de la cita:</label>
+    <input type="date" id="fechaCita" required />
+
+    <button type="submit">Registrar cita</button>
+  </form>
+
+  <h2>📋 Resumen de vehículos atendidos</h2>
+  <pre id="resumenVehiculos">No hay registros aún.</pre>
+
+  <div class="btn-group">
+    <button id="btnBorrar">🗑️ Borrar registros</button>
+    <button id="btnPDF">📥 Descargar PDF</button>
+  </div>
+
+  <!-- jsPDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    const ADMIN_PASSWORD = "admin123"; // Cambia esta contraseña por la que quieras
+
+    // Registrar cita simple
+    document.getElementById("formCita").addEventListener("submit", e => {
+      e.preventDefault();
+
+      const matricula = document.getElementById("matriculaCita").value.trim();
+      const modelo = document.getElementById("modeloCita").value.trim();
+      const fecha = document.getElementById("fechaCita").value;
+
+      if (!matricula || !modelo || !fecha) {
+        alert("Completa todos los campos de la cita.");
+        return;
+      }
+
+      const citas = JSON.parse(localStorage.getItem("citas")) || [];
+      citas.push({ matricula, modelo, fecha });
+      localStorage.setItem("citas", JSON.stringify(citas));
+
+      alert("Cita registrada exitosamente.");
+      e.target.reset();
+    });
+
+    // Mostrar resumen completo de vehículos atendidos
+    function generarResumen() {
+      const registros = JSON.parse(localStorage.getItem("vehiculosAtendidos")) || [];
+
+      if (registros.length === 0) {
+        document.getElementById("resumenVehiculos").textContent = "No hay registros.";
+        return;
+      }
+
+      let resumen = "";
+      registros.forEach(({ fecha, matricula, mecanico, litrosAceite, modeloFiltro, reparaciones }, i) => {
+        resumen += `Registro #${i + 1}\n`;
+        resumen += `Fecha: ${fecha}\n`;
+        resumen += `Matrícula: ${matricula}\n`;
+        resumen += `Mecánico: ${mecanico}\n`;
+        resumen += `Litros de aceite usados: ${litrosAceite}\n`;
+        resumen += `Filtro utilizado: ${modeloFiltro}\n`;
+        resumen += `Otras reparaciones: ${reparaciones || "Ninguna"}\n`;
+        resumen += `------------------------------\n`;
+      });
+
+      document.getElementById("resumenVehiculos").textContent = resumen;
+    }
+
+    // Borrar registros con contraseña
+    document.getElementById("btnBorrar").addEventListener("click", () => {
+      const pass = prompt("Ingrese la contraseña de administrador para borrar los registros:");
+      if (pass === null) return; // Cancelar prompt
+      if (pass === ADMIN_PASSWORD) {
+        localStorage.removeItem("vehiculosAtendidos");
+        alert("Registros borrados correctamente.");
+        generarResumen();
+      } else {
+        alert("Contraseña incorrecta. No se borraron los registros.");
+      }
+    });
+
+    // Descargar PDF con resumen
+    document.getElementById("btnPDF").addEventListener("click", () => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const registros = JSON.parse(localStorage.getItem("vehiculosAtendidos")) || [];
+
+      if (registros.length === 0) {
+        alert("No hay registros para exportar.");
+        return;
+      }
+
+      let y = 10;
+      doc.setFontSize(18);
+      doc.setTextColor("#dc3545");
+      doc.text("Resumen de vehículos atendidos", 14, y);
+      y += 12;
+
+      doc.setFontSize(12);
+      doc.setTextColor(20);
+
+      registros.forEach(({ fecha, matricula, mecanico, litrosAceite, modeloFiltro, reparaciones }, i) => {
+        if (y > 270) { // Salto de página
+          doc.addPage();
+          y = 10;
+        }
+        doc.text(`Registro #${i + 1}`, 14, y);
+        y += 7;
+        doc.text(`Fecha: ${fecha}`, 14, y);
+        y += 7;
+        doc.text(`Matrícula: ${matricula}`, 14, y);
+        y += 7;
+        doc.text(`Mecánico: ${mecanico}`, 14, y);
+        y += 7;
+        doc.text(`Litros de aceite usados: ${litrosAceite}`, 14, y);
+        y += 7;
+        doc.text(`Filtro utilizado: ${modeloFiltro}`, 14, y);
+        y += 7;
+        doc.text(`Otras reparaciones: ${reparaciones || "Ninguna"}`, 14, y);
+        y += 10;
+        doc.line(14, y, 196, y);
+        y += 10;
+      });
+
+      doc.save("Resumen_Vehiculos.pdf");
+    });
+
+    // Cargar resumen al iniciar
+    window.onload = generarResumen;
+  </script>
+</body>
+</html>
+<!-- Compare this snippet from hoja-taller.js: -->
+<!--     const usuariosGuardados = JSON.parse(localStorage.getItem("usuariosRegistrados")) || [];
+ -->

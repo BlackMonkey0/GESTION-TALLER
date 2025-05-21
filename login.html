@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Stock Taller</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 320px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #e74c3c;
+    }
+
+    input, select {
+      width: 90%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    button:hover {
+      background-color: #c0392b;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    #registro-form {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2 id="titulo">Iniciar sesión</h2>
+
+    <!-- FORMULARIO LOGIN -->
+    <form id="form-login">
+      <input type="text" id="usuario" placeholder="Usuario" required>
+      <input type="password" id="contrasena" placeholder="Contraseña" required>
+      <button type="submit">Entrar</button>
+      <button type="button" onclick="mostrarRegistro()">Registrar</button>
+      <div id="mensaje-error" class="error"></div>
+    </form>
+
+    <!-- FORMULARIO REGISTRO -->
+    <form id="registro-form">
+      <input type="text" id="nuevo-usuario" placeholder="Nuevo usuario" required>
+      <input type="password" id="nueva-contrasena" placeholder="Nueva contraseña" required>
+      <select id="nuevo-rol" required>
+        <option value="">Seleccionar rol</option>
+        <option value="Jefe">Jefe</option>
+        <option value="Mecanico">Mecanico</option>
+        <option value="Oficina">Oficina</option>
+      </select>
+      <button type="button" onclick="registrarUsuario()">Guardar usuario</button>
+      <button type="button" onclick="cancelarRegistro()">Cancelar</button>
+      <div id="registro-error" class="error"></div>
+    </form>
+  </div>
+
+  <script>
+    // LOGIN
+    document.getElementById("form-login").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const usuario = document.getElementById("usuario").value.trim();
+      const contrasena = document.getElementById("contrasena").value.trim();
+      const errorDiv = document.getElementById("mensaje-error");
+      const usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+      const usuarioExistente = usuariosGuardados.find(u =>
+        u.usuario === usuario && u.contrasena === contrasena
+      );
+
+      if (usuarioExistente) {
+        localStorage.setItem("rolUsuario", usuarioExistente.rol || "Invitado");
+        localStorage.setItem("usuarioActivo", usuarioExistente.usuario);
+        window.location.href = "index.html";
+      } else {
+        errorDiv.textContent = "Usuario o contraseña incorrectos.";
+      }
+    });
+
+    function mostrarRegistro() {
+      const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+      const jefeExiste = usuarios.some(u => u.rol === "Jefe");
+      const rolActual = localStorage.getItem("rolUsuario");
+
+      if (!jefeExiste || rolActual === "Jefe") {
+        document.getElementById("form-login").style.display = "none";
+        document.getElementById("registro-form").style.display = "block";
+        document.getElementById("titulo").textContent = "Registrar nuevo usuario";
+
+        // Deshabilitar opción Jefe si ya existe uno
+        document.querySelector('#nuevo-rol option[value="Jefe"]').disabled = jefeExiste;
+      } else {
+        alert("Solo un usuario con rol 'Jefe' puede registrar nuevos usuarios.");
+      }
+    }
+
+    function cancelarRegistro() {
+      document.getElementById("form-login").style.display = "block";
+      document.getElementById("registro-form").style.display = "none";
+      document.getElementById("titulo").textContent = "Iniciar sesión";
+      document.getElementById("registro-error").textContent = "";
+    }
+
+    function registrarUsuario() {
+      const usuario = document.getElementById("nuevo-usuario").value.trim();
+      const contrasena = document.getElementById("nueva-contrasena").value.trim();
+      const rol = document.getElementById("nuevo-rol").value;
+      const errorDiv = document.getElementById("registro-error");
+
+      if (!usuario || !contrasena || !rol) {
+        errorDiv.textContent = "Todos los campos son obligatorios.";
+        return;
+      }
+
+      const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+      if (usuarios.some(u => u.usuario === usuario)) {
+        errorDiv.textContent = "Ese usuario ya existe.";
+        return;
+      }
+
+      usuarios.push({ usuario, contrasena, rol });
+      localStorage.setItem("usuarios", JSON.stringify(usuarios));
+      alert("Usuario registrado exitosamente.");
+      cancelarRegistro();
+    }
+
+    // Mostrar automáticamente el formulario si no hay jefe
+    window.onload = () => {
+      const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+      const jefeExiste = usuarios.some(u => u.rol === "Jefe");
+
+      if (!jefeExiste) {
+        mostrarRegistro();
+      }
+    };
+  </script>
+</body>
+</html>

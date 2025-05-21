@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title data-i18n="titulo">Stock Taller</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .btn-registros {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 15px;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    .btn-registros:hover {
+      background-color: #ff0019;
+    }
+  </style>
+</head>
+<body>
+  <header class="barra-superior">
+    <div class="info-tiempo">
+      <h1>
+        <i class="fa fa-calendar icono"></i>
+        <label id="fecha">--</label>
+        <i class="fa fa-clock icono"></i>
+        <label id="reloj">--:--:--</label>
+      </h1>
+    </div>
+    <nav class="menu">
+      <ul id="menu-items"></ul>
+    </nav>
+    <button id="btn-registros" class="btn-registros" data-i18n="registro-resumen">Resumen de Registros</button>
+
+    <div class="idioma-selector">
+      <select id="idioma">
+        <option value="es">Español</option>
+        <option value="en">English</option>
+        <option value="it">Italiano</option>
+      </select>
+      <button id="cerrar-sesion">
+        <i class="fas fa-sign-out-alt"></i> <span data-i18n="cerrar_sesion">Cerrar sesión</span>
+      </button>
+    </div>
+  </header>
+
+  <h1 id="bienvenida-texto" data-i18n="bienvenida">Bienvenido al Gestor de Stock del Taller</h1>
+
+  <!-- Registro de usuarios (solo para Jefe) -->
+  <div id="registro-contenedor" style="display: none;">
+    <div class="registro-card">
+      <h2>Registrar nuevo usuario</h2>
+      <form id="form-registro">
+        <div class="form-grupo">
+          <label for="nuevo-usuario">Usuario:</label>
+          <input type="text" id="nuevo-usuario" required>
+        </div>
+        <div class="form-grupo">
+          <label for="nueva-clave">Contraseña:</label>
+          <input type="password" id="nueva-clave" required>
+        </div>
+        <div class="form-grupo">
+          <label for="nuevo-rol">Rol:</label>
+          <select id="nuevo-rol" required>
+            <option value="">Seleccionar...</option>
+            <option value="Mecanico">Mecánico</option>
+            <option value="Oficina">Oficina</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-registrar">Registrar</button>
+      </form>
+
+      <!-- Aquí se muestra el QR -->
+      <h3 style="margin-top: 20px;">Valora nuestro servicio escaneando el QR:</h3>
+      <div id="qr"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    // Usa IP local directamente
+    const urlOpiniones = "http://192.168.1.42/opiniones.html";
+    new QRCode(document.getElementById("qr"), {
+      text: urlOpiniones,
+      width: 200,
+      height: 200
+    });
+  </script>
+
+  <script>
+    function actualizarReloj() {
+      const ahora = new Date();
+      const horas = String(ahora.getHours()).padStart(2, '0');
+      const minutos = String(ahora.getMinutes()).padStart(2, '0');
+      const segundos = String(ahora.getSeconds()).padStart(2, '0');
+      document.getElementById('reloj').textContent = `${horas}:${minutos}:${segundos}`;
+
+      const idioma = localStorage.getItem("idiomaSeleccionado") || "es";
+      const fecha = ahora.toLocaleDateString(
+        idioma === "en" ? 'en-US' : idioma === "it" ? 'it-IT' : 'es-ES', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        }
+      );
+      document.getElementById('fecha').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+    }
+
+    setInterval(actualizarReloj, 1000);
+    actualizarReloj();
+
+    const traducciones = {
+      es: {
+        titulo: "Stock Taller",
+        inventario: "Inventario",
+        neumaticos: "Pneumaticos",
+        hoja: "Hoja de taller",
+        vehiculos: "Vehículos",
+        bienvenida: "Bienvenido al Gestor de Stock del Taller",
+        cerrar_sesion: "Cerrar sesión",
+        registros_resumen: "Resumen de Registros"
+      },
+      en: {
+        titulo: "Workshop Stock",
+        inventario: "Inventory",
+        neumaticos: "Tires",
+        hoja: "Workshop Sheet",
+        vehiculos: "Vehicles",
+        bienvenida: "Welcome to the Workshop Stock Manager",
+        cerrar_sesion: "Log out",
+        registros_resumen: "Records Summary"
+      },
+      it: {
+        titulo: "Magazzino Officina",
+        inventario: "Inventario",
+        neumaticos: "Pneumatici",
+        hoja: "Scheda officina",
+        vehiculos: "Veicoli",
+        bienvenida: "Benvenuto nel Gestore Magazzino dell'Officina",
+        cerrar_sesion: "Disconnettersi",
+        registros_resumen: "Riepilogo Registri"
+      }
+    };
+
+    function traducir(idioma) {
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const clave = el.getAttribute("data-i18n");
+        el.textContent = traducciones[idioma][clave] || clave;
+      });
+      localStorage.setItem("idiomaSeleccionado", idioma);
+      actualizarReloj();
+    }
+
+    document.getElementById("idioma").addEventListener("change", (e) => {
+      traducir(e.target.value);
+    });
+
+    const idiomaGuardado = localStorage.getItem("idiomaSeleccionado") || "es";
+    document.getElementById("idioma").value = idiomaGuardado;
+    traducir(idiomaGuardado);
+
+    document.getElementById("cerrar-sesion").addEventListener("click", () => {
+      localStorage.removeItem("rolUsuario");
+      localStorage.removeItem("idiomaSeleccionado");
+      window.location.href = "login.html";
+    });
+
+    document.getElementById("btn-registros").addEventListener("click", () => {
+      window.location.href = "registros-resumen.html";
+    });
+
+    window.onload = function () {
+      const rol = localStorage.getItem("rolUsuario");
+
+      if (!rol) {
+        alert("Debes iniciar sesión.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const menu = document.getElementById("menu-items");
+      const bienvenida = document.getElementById("bienvenida-texto");
+
+      if (rol === "Jefe" || rol === "Oficina") {
+        menu.innerHTML = `
+          <li><a href="/inventario.html" data-i18n="inventario">Inventario</a></li>
+          <li><a href="/pneumatici.html" data-i18n="neumaticos">Pneumaticos</a></li>
+          <li><a href="/vehiculos.html" data-i18n="vehiculos">Vehículos</a></li>
+          <li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>
+        `;
+      } else if (rol === "Mecanico") {
+        menu.innerHTML = `<li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>`;
+      } else {
+        bienvenida.textContent = "Rol no válido. Contacte al administrador.";
+        menu.innerHTML = "";
+      }
+
+      traducir(idiomaGuardado);
+
+      if (rol === "Jefe") {
+        document.getElementById("registro-contenedor").style.display = "flex";
+      }
+
+      const formRegistro = document.getElementById("form-registro");
+      if (formRegistro) {
+        formRegistro.addEventListener("submit", function (e) {
+          e.preventDefault();
+          const nuevoUsuario = document.getElementById("nuevo-usuario").value.trim();
+          const nuevaClave = document.getElementById("nueva-clave").value;
+          const nuevoRol = document.getElementById("nuevo-rol").value;
+
+          if (!nuevoUsuario || !nuevaClave || !nuevoRol) {
+            alert("Todos los campos son obligatorios.");
+            return;
+          }
+
+          const usuariosGuardados = JSON.parse(localStorage.getItem("usuariosRegistrados")) || [];
+          const existe = usuariosGuardados.find(u => u.usuario === nuevoUsuario);
+          if (existe) {
+            alert("Este usuario ya existe.");
+            return;
+          }
+
+          usuariosGuardados.push({ usuario: nuevoUsuario, clave: nuevaClave, rol: nuevoRol });
+          localStorage.setItem("usuariosRegistrados", JSON.stringify(usuariosGuardados));
+
+          alert("Usuario registrado correctamente.");
+          formRegistro.reset();
+        });
+      }
+    };
+  </script>
+</body>
+</html>

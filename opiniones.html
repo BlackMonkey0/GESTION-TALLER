@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Opiniones y Valoraciones</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    textarea, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    button { margin-top: 15px; padding: 10px 20px; background-color: #ff1900; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background-color: #d11600; }
+    .opinion { background: #f5f5f5; padding: 10px; margin-top: 15px; border-radius: 5px; }
+    .estrellas { color: gold; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <h2>Deja tu opinión y valoración</h2>
+  <form id="formOpinion">
+    <label for="nombre">Tu nombre (opcional):</label>
+    <input type="text" id="nombre" placeholder="Ej. Juan Pérez" />
+
+    <label for="valoracion">Valoración del servicio:</label>
+    <select id="valoracion" required>
+      <option value="">Selecciona...</option>
+      <option value="5">★★★★★ Excelente</option>
+      <option value="4">★★★★ Muy bueno</option>
+      <option value="3">★★★ Bueno</option>
+      <option value="2">★★ Regular</option>
+      <option value="1">★ Malo</option>
+    </select>
+<button id="btnBorrarOpiniones" style="background-color: #ffffff; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin-top: 15px;">
+  Borrar todas las opiniones
+</button>
+
+    <label for="comentario">Comentario:</label>
+    <textarea id="comentario" rows="4" placeholder="Cuéntanos tu experiencia..." required></textarea>
+
+    <button type="submit">Enviar opinión</button>
+  </form>
+
+  <h3>Opiniones recibidas</h3>
+  <div id="opinionesContainer">
+    <p>No hay opiniones aún.</p>
+  </div>
+
+  <script>
+    const form = document.getElementById("formOpinion");
+    const opinionesContainer = document.getElementById("opinionesContainer");
+
+    // Cargar opiniones desde localStorage
+    function cargarOpiniones() {
+      const opiniones = JSON.parse(localStorage.getItem("opinionesTaller")) || [];
+      if (opiniones.length === 0) {
+        opinionesContainer.innerHTML = "<p>No hay opiniones aún.</p>";
+        return;
+      }
+
+      opinionesContainer.innerHTML = ""; // limpiar
+      opiniones.forEach(({nombre, valoracion, comentario}, i) => {
+        const estrellas = "★".repeat(valoracion) + "☆".repeat(5 - valoracion);
+        const div = document.createElement("div");
+        div.className = "opinion";
+        div.innerHTML = `
+          <strong>${nombre || "Anónimo"}</strong> - <span class="estrellas">${estrellas}</span>
+          <p>${comentario}</p>
+        `;
+        opinionesContainer.appendChild(div);
+      });
+    }
+
+    cargarOpiniones();
+
+    // Guardar nueva opinión
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const nombre = document.getElementById("nombre").value.trim();
+      const valoracion = parseInt(document.getElementById("valoracion").value);
+      const comentario = document.getElementById("comentario").value.trim();
+
+      if (!valoracion || !comentario) {
+        alert("Por favor, selecciona una valoración y escribe un comentario.");
+        return;
+      }
+
+      const opiniones = JSON.parse(localStorage.getItem("opinionesTaller")) || [];
+      opiniones.push({ nombre, valoracion, comentario });
+      localStorage.setItem("opinionesTaller", JSON.stringify(opiniones));
+
+      alert("¡Gracias por tu opinión!");
+      form.reset();
+      cargarOpiniones();
+    });
+    
+  </script>
+  <script>
+  document.getElementById("btnBorrarOpiniones").addEventListener("click", () => {
+    const password = prompt("Introduce la contraseña de administrador para borrar todas las opiniones:");
+
+    // Cambia "admin123" por la contraseña que quieras
+    if (password === "admin123") {
+      localStorage.removeItem("opinionesTaller");
+      alert("¡Todas las opiniones han sido borradas!");
+      location.reload();  // Recarga para actualizar la lista
+    } else {
+      alert("Contraseña incorrecta. No se borraron las opiniones.");
+    }
+  });
+</script>
+
+</body>
+</html>
