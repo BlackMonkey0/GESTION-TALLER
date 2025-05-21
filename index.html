@@ -90,7 +90,6 @@
         <button type="submit" class="btn-registrar">Registrar</button>
       </form>
 
-      <!-- Aquí se muestra tu QR personalizado -->
       <div class="qr-personalizado">
         <h3>Escanea para dejarnos tu opinión:</h3>
         <img src="frame.png" alt="QR de opiniones" width="200" height="200">
@@ -192,9 +191,9 @@
 
       if (rol === "Jefe" || rol === "Oficina") {
         menu.innerHTML = `
-          <li><a href="/inventario.html" data-i18n="inventario">Inventario</a></li>
-          <li><a href="/pneumatici.html" data-i18n="neumaticos">Pneumaticos</a></li>
-          <li><a href="/vehiculos.html" data-i18n="vehiculos">Vehículos</a></li>
+          <li><a href="inventario.html" data-i18n="inventario">Inventario</a></li>
+          <li><a href="pneumatici.html" data-i18n="neumaticos">Pneumaticos</a></li>
+          <li><a href="vehiculos.html" data-i18n="vehiculos">Vehículos</a></li>
           <li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>
         `;
       } else if (rol === "Mecanico") {
