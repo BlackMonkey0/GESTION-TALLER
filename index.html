@@ -37,6 +37,7 @@
       <ul id="menu-items"></ul>
     </nav>
     <button id="btn-registros" class="btn-registros" data-i18n="registro-resumen">Resumen de Registros</button>
+    <button id="btn-opiniones" class="btn-registros" data-i18n="opiniones">Opiniones</button>
 
     <div class="idioma-selector">
       <select id="idioma">
@@ -122,7 +123,8 @@
         vehiculos: "Vehículos",
         bienvenida: "Bienvenido al Gestor de Stock del Taller",
         cerrar_sesion: "Cerrar sesión",
-        registros_resumen: "Resumen de Registros"
+        registros_resumen: "Resumen de Registros",
+        opiniones: "Opiniones"
       },
       en: {
         titulo: "Workshop Stock",
@@ -132,7 +134,8 @@
         vehiculos: "Vehicles",
         bienvenida: "Welcome to the Workshop Stock Manager",
         cerrar_sesion: "Log out",
-        registros_resumen: "Records Summary"
+        registros_resumen: "Records Summary",
+        opiniones: "Feedback"
       },
       it: {
         titulo: "Magazzino Officina",
@@ -142,7 +145,8 @@
         vehiculos: "Veicoli",
         bienvenida: "Benvenuto nel Gestore Magazzino dell'Officina",
         cerrar_sesion: "Disconnettersi",
-        registros_resumen: "Riepilogo Registri"
+        registros_resumen: "Riepilogo Registri",
+        opiniones: "Opinioni"
       }
     };
 
@@ -171,6 +175,10 @@
 
     document.getElementById("btn-registros").addEventListener("click", () => {
       window.location.href = "registros-resumen.html";
+    });
+
+    document.getElementById("btn-opiniones").addEventListener("click", () => {
+      window.location.href = "opiniones.html";
     });
 
     window.onload = function () {
