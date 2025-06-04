@@ -21,19 +21,60 @@
     .btn-registros:hover {
       background-color: #ff0019;
     }
-    .qr-personalizado {
-      text-align: center;
-      margin-top: 20px;
+
+    #whatsapp-float {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #25D366;
+      color: white;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 999;
     }
-    .qr-personalizado h3 {
+
+    #whatsapp-form {
+      display: none;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      z-index: 998;
+      width: 260px;
+    }
+
+    #whatsapp-form input {
+      width: 100%;
+      padding: 6px 10px;
+      margin-bottom: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.95rem;
+    }
+
+    #whatsapp-form button {
+      background-color: #25D366;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 7px;
+      border-radius: 4px;
+      cursor: pointer;
       font-weight: 600;
-      margin-bottom: 10px;
-      font-size: 1.1rem;
     }
-    .qr-personalizado img {
-      border: 2px solid #444;
-      border-radius: 10px;
-      padding: 8px;
+
+    #whatsapp-form button:hover {
+      background-color: #1ebe5d;
     }
   </style>
 </head>
@@ -66,7 +107,6 @@
 
   <h1 id="bienvenida-texto" data-i18n="bienvenida">Bienvenido al Gestor de Stock del Taller</h1>
 
-  <!-- Registro de usuarios (solo para Jefe) -->
   <div id="registro-contenedor" style="display: none;">
     <div class="registro-card">
       <h2>Registrar nuevo usuario</h2>
@@ -89,15 +129,30 @@
         </div>
         <button type="submit" class="btn-registrar">Registrar</button>
       </form>
-
-      <div class="qr-personalizado">
-        <h3>Escanea para dejarnos tu opinión:</h3>
-        <img src="frame.png" alt="QR de opiniones" width="200" height="200">
-      </div>
+      <h3 style="margin-top: 20px;">Valora nuestro servicio escaneando el QR:</h3>
+      <div id="qr"></div>
     </div>
   </div>
 
+  <div id="whatsapp-float" title="Contáctanos por WhatsApp">
+    <i class="fab fa-whatsapp"></i>
+  </div>
+
+  <div id="whatsapp-form">
+    <label for="input-matricula" style="font-size: 0.9rem; font-weight: 500; margin-bottom: 4px;">Introduce tu matrícula:</label>
+    <input type="text" id="input-matricula" placeholder="Ej: ABC123">
+    <button onclick="enviarWhatsApp()">Enviar</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
+    const urlOpiniones = "http://192.168.1.42/opiniones.html";
+    new QRCode(document.getElementById("qr"), {
+      text: urlOpiniones,
+      width: 200,
+      height: 200
+    });
+
     function actualizarReloj() {
       const ahora = new Date();
       const horas = String(ahora.getHours()).padStart(2, '0');
@@ -106,11 +161,9 @@
       document.getElementById('reloj').textContent = `${horas}:${minutos}:${segundos}`;
 
       const idioma = localStorage.getItem("idiomaSeleccionado") || "es";
-      const fecha = ahora.toLocaleDateString(
-        idioma === "en" ? 'en-US' : idioma === "it" ? 'it-IT' : 'es-ES', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-        }
-      );
+      const fecha = ahora.toLocaleDateString(idioma === "en" ? 'en-US' : idioma === "it" ? 'it-IT' : 'es-ES', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
       document.getElementById('fecha').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
     }
 
@@ -179,34 +232,27 @@
 
     window.onload = function () {
       const rol = localStorage.getItem("rolUsuario");
-
       if (!rol) {
         alert("Debes iniciar sesión.");
         window.location.href = "login.html";
         return;
       }
-
       const menu = document.getElementById("menu-items");
       const bienvenida = document.getElementById("bienvenida-texto");
-
       if (rol === "Jefe" || rol === "Oficina") {
         menu.innerHTML = `
-          <li><a href="inventario.html" data-i18n="inventario">Inventario</a></li>
-          <li><a href="pneumatici.html" data-i18n="neumaticos">Pneumaticos</a></li>
-          <li><a href="vehiculos.html" data-i18n="vehiculos">Vehículos</a></li>
+          <li><a href="/inventario.html" data-i18n="inventario">Inventario</a></li>
+          <li><a href="/pneumatici.html" data-i18n="neumaticos">Pneumaticos</a></li>
+          <li><a href="/vehiculos.html" data-i18n="vehiculos">Vehículos</a></li>
           <li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>
         `;
       } else if (rol === "Mecanico") {
-        menu.innerHTML = `
-          <li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>
-        `;
+        menu.innerHTML = `<li><a href="hoja-taller.html" data-i18n="hoja">Hoja de taller</a></li>`;
       } else {
         bienvenida.textContent = "Rol no válido. Contacte al administrador.";
         menu.innerHTML = "";
       }
-
       traducir(idiomaGuardado);
-
       if (rol === "Jefe") {
         document.getElementById("registro-contenedor").style.display = "flex";
       }
@@ -239,6 +285,160 @@
         });
       }
     };
+
+    function enviarWhatsApp() {
+      const telefonoTaller = "39349198064";
+      const input = document.getElementById("input-matricula");
+      const matricula = input.value.trim();
+      if (!matricula) {
+        alert("Por favor, introduce tu matrícula.");
+        return;
+      }
+      const mensaje = `Hola, quiero saber el estado de mi vehículo con matrícula ${matricula}`;
+      const url = `https://wa.me/${telefonoTaller}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank');
+    }
+
+    // Mostrar/ocultar el formulario de WhatsApp al hacer clic en el botón flotante
+    document.getElementById("whatsapp-float").addEventListener("click", () => {
+      const form = document.getElementById("whatsapp-form");
+      form.style.display = form.style.display === "none" ? "block" : "none";
+    });
   </script>
+  <!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Escaneo Matrícula</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    video, canvas {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: block;
+    }
+    #info-vehiculo {
+      margin-top: 15px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      background: #f5f5f5;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    input[type=\"text\"] {
+      padding: 6px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Escanear Matrícula de Vehículo</h2>
+
+  <button onclick="abrirCamara()">📸 Activar cámara</button>
+  <video id="video" width="320" height="240" autoplay style="display:none;"></video>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <button id="capturar" onclick="capturarImagen()" style="display:none;">Capturar Imagen</button>
+
+  <div style="margin-top: 20px;">
+    <input type="text" id="matricula-manual" placeholder="Introduce matrícula (Ej: ABC123)" />
+    <button onclick="buscarVehiculo()">Buscar</button>
+  </div>
+
+  <div id="info-vehiculo"></div>
+
+  <script>
+    const dbVehiculos = {
+      "ABC123": {
+        color: "Rojo",
+        bastidor: "1HGCM82633A123456",
+        categoria: "Pick Up",
+        itv: "2026-03-10",
+        revision: "2024-10-01"
+      },
+      "XYZ789": {
+        color: "Blanco",
+        bastidor: "WDBJF65JYXA123456",
+        categoria: "TM",
+        itv: "2025-01-15",
+        revision: "2024-06-01"
+      }
+    };
+
+    function abrirCamara() {
+      const video = document.getElementById("video");
+      const capturar = document.getElementById("capturar");
+      video.style.display = "block";
+      capturar.style.display = "inline";
+
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          video.srcObject = stream;
+        })
+        .catch((err) => {
+          alert("Error al acceder a la cámara: " + err);
+        });
+    }
+
+    function capturarImagen() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const context = canvas.getContext("2d");
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.style.display = "block";
+
+      alert("Imagen capturada. Introduce la matrícula manualmente para buscar.");
+    }
+
+    function buscarVehiculo() {
+      const matricula = document.getElementById("matricula-manual").value.trim().toUpperCase();
+      const info = dbVehiculos[matricula];
+      const contenedor = document.getElementById("info-vehiculo");
+
+      if (!info) {
+        contenedor.style.display = "block";
+        contenedor.innerHTML = `<strong>Matrícula no encontrada.</strong>`;
+        return;
+      }
+
+      const hoy = new Date();
+      const itvFecha = new Date(info.itv);
+      const diff = Math.ceil((itvFecha - hoy) / (1000 * 60 * 60 * 24));
+      const itvTexto = diff < 0 ? `Vencida hace ${-diff} días` : `Faltan ${diff} días`;
+
+      contenedor.style.display = "block";
+      contenedor.innerHTML = `
+        <strong>Datos del vehículo:</strong><br>
+        Matrícula: ${matricula}<br>
+        Color: ${info.color}<br>
+        Bastidor: ${info.bastidor}<br>
+        Categoría: ${info.categoria}<br>
+        ITV: ${info.itv} (${itvTexto})<br>
+        Última revisión: ${info.revision}
+      `;
+    }
+  </script>
+</body>
+</html>
+
 </body>
 </html>
