@@ -366,77 +366,100 @@
 
   <div id="info-vehiculo"></div>
 
-  <script>
-    const dbVehiculos = {
-      "ABC123": {
-        color: "Rojo",
-        bastidor: "1HGCM82633A123456",
-        categoria: "Pick Up",
-        itv: "2026-03-10",
-        revision: "2024-10-01"
-      },
-      "XYZ789": {
-        color: "Blanco",
-        bastidor: "WDBJF65JYXA123456",
-        categoria: "TM",
-        itv: "2025-01-15",
-        revision: "2024-06-01"
-      }
-    };
+  <!-- OCR y escaneo de matrícula italiana -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+<div style="margin-top: 30px;">
+  <h2>📷 Escaneo automático de matrícula (Italia)</h2>
+  <button onclick="activarCamaraTrasera()">📸 Escanear Matrícula</button><br>
+  <video id="video-matricula" autoplay playsinline style="width: 320px; height: 240px; display:none;"></video>
+  <canvas id="canvas-matricula" width="320" height="240" style="display:none;"></canvas>
+  <div id="info-matricula-auto" style="margin-top:15px; display:none; padding:10px; background:#f0f0f0; border-radius:8px;"></div>
+</div>
 
-    function abrirCamara() {
-      const video = document.getElementById("video");
-      const capturar = document.getElementById("capturar");
+<script>
+  const dbVehiculos = {
+    "GX474WG": {
+      color: "BLANCO",
+      bastidor: "VF3YCF6FSG009044",
+      categoria: "FP",
+      itv: "08/05/2029",
+      revision: "04-06-2025"
+    },
+    "EZ456GH": {
+      color: "Azul",
+      bastidor: "VF1RFA00855234567",
+      categoria: "Turismo",
+      itv: "10/03/2026",
+      revision: "01-11-2024"
+    }
+  };
+
+  let streamCamara;
+
+  function activarCamaraTrasera() {
+    const video = document.getElementById("video-matricula");
+    navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { exact: "environment" }
+      }
+    }).then(function(stream) {
+      streamCamara = stream;
+      video.srcObject = stream;
       video.style.display = "block";
-      capturar.style.display = "inline";
+      setTimeout(capturarYReconocerMatricula, 3000); // capturar tras 3 segundos
+    }).catch(function(error) {
+      alert("No se pudo acceder a la cámara trasera.");
+      console.error(error);
+    });
+  }
 
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-          video.srcObject = stream;
-        })
-        .catch((err) => {
-          alert("Error al acceder a la cámara: " + err);
-        });
+  function capturarYReconocerMatricula() {
+    const video = document.getElementById("video-matricula");
+    const canvas = document.getElementById("canvas-matricula");
+    const context = canvas.getContext("2d");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Detener cámara
+    if (streamCamara) {
+      streamCamara.getTracks().forEach(track => track.stop());
     }
 
-    function capturarImagen() {
-      const video = document.getElementById("video");
-      const canvas = document.getElementById("canvas");
-      const context = canvas.getContext("2d");
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.style.display = "block";
-
-      alert("Imagen capturada. Introduce la matrícula manualmente para buscar.");
-    }
-
-    function buscarVehiculo() {
-      const matricula = document.getElementById("matricula-manual").value.trim().toUpperCase();
-      const info = dbVehiculos[matricula];
-      const contenedor = document.getElementById("info-vehiculo");
-
-      if (!info) {
-        contenedor.style.display = "block";
-        contenedor.innerHTML = `<strong>Matrícula no encontrada.</strong>`;
-        return;
+    Tesseract.recognize(
+      canvas,
+      'eng',
+      {
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
       }
+    ).then(({ data: { text } }) => {
+      const posibleMatricula = (text.match(/[A-Z]{2}\d{3}[A-Z]{2}/) || [])[0];
+      const info = document.getElementById("info-matricula-auto");
 
-      const hoy = new Date();
-      const itvFecha = new Date(info.itv);
-      const diff = Math.ceil((itvFecha - hoy) / (1000 * 60 * 60 * 24));
-      const itvTexto = diff < 0 ? `Vencida hace ${-diff} días` : `Faltan ${diff} días`;
+      if (posibleMatricula && dbVehiculos[posibleMatricula]) {
+        const v = dbVehiculos[posibleMatricula];
+        const hoy = new Date();
+        const itvFecha = new Date(v.itv);
+        const diasITV = Math.ceil((itvFecha - hoy) / (1000 * 60 * 60 * 24));
+        info.innerHTML = `
+          <strong>Matrícula:</strong> ${posibleMatricula}<br>
+          <strong>Color:</strong> ${v.color}<br>
+          <strong>Bastidor:</strong> ${v.bastidor}<br>
+          <strong>Categoría:</strong> ${v.categoria}<br>
+          <strong>ITV:</strong> ${v.itv} (${diasITV < 0 ? `Vencida hace ${-diasITV} días` : `Faltan ${diasITV} días`})<br>
+          <strong>Última revisión:</strong> ${v.revision}
+        `;
+        info.style.display = "block";
+      } else {
+        info.innerHTML = "<strong>Matrícula no reconocida o no encontrada.</strong>";
+        info.style.display = "block";
+      }
+    }).catch(err => {
+      alert("Error al procesar la imagen.");
+      console.error(err);
+    });
+  }
+</script>
 
-      contenedor.style.display = "block";
-      contenedor.innerHTML = `
-        <strong>Datos del vehículo:</strong><br>
-        Matrícula: ${matricula}<br>
-        Color: ${info.color}<br>
-        Bastidor: ${info.bastidor}<br>
-        Categoría: ${info.categoria}<br>
-        ITV: ${info.itv} (${itvTexto})<br>
-        Última revisión: ${info.revision}
-      `;
-    }
-  </script>
+  
 </body>
 </html>
 
