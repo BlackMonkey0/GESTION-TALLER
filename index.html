@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title data-i18n="titulo">Stock Taller</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
   <style>
     .btn-registros {
       background-color: #dc3545;
@@ -26,7 +29,7 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background-color: #25D366;
+      background-color: #25d366;
       color: white;
       border-radius: 50%;
       width: 56px;
@@ -35,7 +38,7 @@
       align-items: center;
       justify-content: center;
       font-size: 28px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
       cursor: pointer;
       z-index: 999;
     }
@@ -48,7 +51,7 @@
       background: white;
       padding: 12px;
       border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
       z-index: 998;
       width: 260px;
     }
@@ -63,7 +66,7 @@
     }
 
     #whatsapp-form button {
-      background-color: #25D366;
+      background-color: #25d366;
       color: white;
       border: none;
       width: 100%;
@@ -91,7 +94,13 @@
     <nav class="menu">
       <ul id="menu-items"></ul>
     </nav>
-    <button id="btn-registros" class="btn-registros" data-i18n="registro-resumen">Resumen de Registros</button>
+    <button
+      id="btn-registros"
+      class="btn-registros"
+      data-i18n="registro-resumen"
+    >
+      Resumen de Registros
+    </button>
 
     <div class="idioma-selector">
       <select id="idioma">
@@ -100,12 +109,15 @@
         <option value="it">Italiano</option>
       </select>
       <button id="cerrar-sesion">
-        <i class="fas fa-sign-out-alt"></i> <span data-i18n="cerrar_sesion">Cerrar sesión</span>
+        <i class="fas fa-sign-out-alt"></i>
+        <span data-i18n="cerrar_sesion">Cerrar sesión</span>
       </button>
     </div>
   </header>
 
-  <h1 id="bienvenida-texto" data-i18n="bienvenida">Bienvenido al Gestor de Stock del Taller</h1>
+  <h1 id="bienvenida-texto" data-i18n="bienvenida">
+    Bienvenido al Gestor de Stock del Taller
+  </h1>
 
   <div id="registro-contenedor" style="display: none;">
     <div class="registro-card">
@@ -113,11 +125,11 @@
       <form id="form-registro">
         <div class="form-grupo">
           <label for="nuevo-usuario">Usuario:</label>
-          <input type="text" id="nuevo-usuario" required>
+          <input type="text" id="nuevo-usuario" required />
         </div>
         <div class="form-grupo">
           <label for="nueva-clave">Contraseña:</label>
-          <input type="password" id="nueva-clave" required>
+          <input type="password" id="nueva-clave" required />
         </div>
         <div class="form-grupo">
           <label for="nuevo-rol">Rol:</label>
@@ -139,8 +151,12 @@
   </div>
 
   <div id="whatsapp-form">
-    <label for="input-matricula" style="font-size: 0.9rem; font-weight: 500; margin-bottom: 4px;">Introduce tu matrícula:</label>
-    <input type="text" id="input-matricula" placeholder="Ej: ABC123">
+    <label
+      for="input-matricula"
+      style="font-size: 0.9rem; font-weight: 500; margin-bottom: 4px"
+      >Introduce tu matrícula:</label
+    >
+    <input type="text" id="input-matricula" placeholder="Ej: ABC123" />
     <button onclick="enviarWhatsApp()">Enviar</button>
   </div>
 
@@ -150,21 +166,28 @@
     new QRCode(document.getElementById("qr"), {
       text: urlOpiniones,
       width: 200,
-      height: 200
+      height: 200,
     });
 
     function actualizarReloj() {
       const ahora = new Date();
-      const horas = String(ahora.getHours()).padStart(2, '0');
-      const minutos = String(ahora.getMinutes()).padStart(2, '0');
-      const segundos = String(ahora.getSeconds()).padStart(2, '0');
-      document.getElementById('reloj').textContent = `${horas}:${minutos}:${segundos}`;
+      const horas = String(ahora.getHours()).padStart(2, "0");
+      const minutos = String(ahora.getMinutes()).padStart(2, "0");
+      const segundos = String(ahora.getSeconds()).padStart(2, "0");
+      document.getElementById("reloj").textContent = `${horas}:${minutos}:${segundos}`;
 
       const idioma = localStorage.getItem("idiomaSeleccionado") || "es";
-      const fecha = ahora.toLocaleDateString(idioma === "en" ? 'en-US' : idioma === "it" ? 'it-IT' : 'es-ES', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      });
-      document.getElementById('fecha').textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+      const fecha = ahora.toLocaleDateString(
+        idioma === "en" ? "en-US" : idioma === "it" ? "it-IT" : "es-ES",
+        {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }
+      );
+      document.getElementById("fecha").textContent =
+        fecha.charAt(0).toUpperCase() + fecha.slice(1);
     }
 
     setInterval(actualizarReloj, 1000);
@@ -179,7 +202,7 @@
         vehiculos: "Vehículos",
         bienvenida: "Bienvenido al Gestor de Stock del Taller",
         cerrar_sesion: "Cerrar sesión",
-        registros_resumen: "Resumen de Registros"
+        registros_resumen: "Resumen de Registros",
       },
       en: {
         titulo: "Workshop Stock",
@@ -189,7 +212,7 @@
         vehiculos: "Vehicles",
         bienvenida: "Welcome to the Workshop Stock Manager",
         cerrar_sesion: "Log out",
-        registros_resumen: "Records Summary"
+        registros_resumen: "Records Summary",
       },
       it: {
         titulo: "Magazzino Officina",
@@ -199,12 +222,12 @@
         vehiculos: "Veicoli",
         bienvenida: "Benvenuto nel Gestore Magazzino dell'Officina",
         cerrar_sesion: "Disconnettersi",
-        registros_resumen: "Riepilogo Registri"
-      }
+        registros_resumen: "Riepilogo Registri",
+      },
     };
 
     function traducir(idioma) {
-      document.querySelectorAll("[data-i18n]").forEach(el => {
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
         const clave = el.getAttribute("data-i18n");
         el.textContent = traducciones[idioma][clave] || clave;
       });
@@ -270,15 +293,25 @@
             return;
           }
 
-          const usuariosGuardados = JSON.parse(localStorage.getItem("usuariosRegistrados")) || [];
-          const existe = usuariosGuardados.find(u => u.usuario === nuevoUsuario);
+          const usuariosGuardados =
+            JSON.parse(localStorage.getItem("usuariosRegistrados")) || [];
+          const existe = usuariosGuardados.find(
+            (u) => u.usuario === nuevoUsuario
+          );
           if (existe) {
             alert("Este usuario ya existe.");
             return;
           }
 
-          usuariosGuardados.push({ usuario: nuevoUsuario, clave: nuevaClave, rol: nuevoRol });
-          localStorage.setItem("usuariosRegistrados", JSON.stringify(usuariosGuardados));
+          usuariosGuardados.push({
+            usuario: nuevoUsuario,
+            clave: nuevaClave,
+            rol: nuevoRol,
+          });
+          localStorage.setItem(
+            "usuariosRegistrados",
+            JSON.stringify(usuariosGuardados)
+          );
 
           alert("Usuario registrado correctamente.");
           formRegistro.reset();
@@ -286,182 +319,54 @@
       }
     };
 
+    // WhatsApp Floating Button Behavior
+    const whatsappFloat = document.getElementById("whatsapp-float");
+    const whatsappForm = document.getElementById("whatsapp-form");
+    whatsappFloat.addEventListener("click", () => {
+      whatsappForm.style.display =
+        whatsappForm.style.display === "block" ? "none" : "block";
+    });
+
+    // Enviar mensaje a WhatsApp
     function enviarWhatsApp() {
-      const telefonoTaller = "39349198064";
-      const input = document.getElementById("input-matricula");
-      const matricula = input.value.trim();
-      if (!matricula) {
-        alert("Por favor, introduce tu matrícula.");
-        return;
-      }
-      const mensaje = `Hola, quiero saber el estado de mi vehículo con matrícula ${matricula}`;
-      const url = `https://wa.me/${telefonoTaller}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, '_blank');
-    }
+      const inputMatricula = document.getElementById("input-matricula");
+      let matricula = inputMatricula.value.trim().toUpperCase();
 
-    // Mostrar/ocultar el formulario de WhatsApp al hacer clic en el botón flotante
-    document.getElementById("whatsapp-float").addEventListener("click", () => {
-      const form = document.getElementById("whatsapp-form");
-      form.style.display = form.style.display === "none" ? "block" : "none";
-    });
-  </script>
-  <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Escaneo Matrícula</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    video, canvas {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-top: 10px;
-      display: block;
-    }
-    #info-vehiculo {
-      margin-top: 15px;
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 8px;
-      display: none;
-      background: #f5f5f5;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    input[type=\"text\"] {
-      padding: 6px;
-      font-size: 16px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      width: 200px;
-    }
-  </style>
-</head>
-<body>
-  <h2>Escanear Matrícula de Vehículo</h2>
+      // Ajustamos la matrícula para aceptar símbolo especial entre las primeras letras
+      // Permitimos que las dos primeras posiciones sean letras o un símbolo especial en medio, ejemplo: G#X
+      // Luego 3 números y 2 letras al final
 
-  <button onclick="abrirCamara()">📸 Activar cámara</button>
-  <video id="video" width="320" height="240" autoplay style="display:none;"></video>
-  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-  <button id="capturar" onclick="capturarImagen()" style="display:none;">Capturar Imagen</button>
+      // Limpiar matrícula de espacios y caracteres no permitidos excepto el símbolo especial # o similar
+      // Para este ejemplo consideramos que el símbolo especial puede ser un solo carácter no alfanumérico
+      matricula = matricula.replace(/\s+/g, ""); // quitar espacios
 
-  <div style="margin-top: 20px;">
-    <input type="text" id="matricula-manual" placeholder="Introduce matrícula (Ej: ABC123)" />
-    <button onclick="buscarVehiculo()">Buscar</button>
-  </div>
+      // Patrón que detecta dos letras al inicio, permitiendo un símbolo especial en el medio (como G#X o GX)
+      // Formato completo: [Letra][Símbolo opcional][Letra][3 números][2 letras]
+      // Vamos a capturar y limpiar el símbolo para tener solo letras y números al final.
 
-  <div id="info-vehiculo"></div>
+      // Usamos expresión para detectar el patrón italiano con posible símbolo especial en la posición 2:
+      const regexMatricula = /^([A-Z])([^A-Z0-9]?)([A-Z])(\d{3})([A-Z]{2})$/;
 
-  <!-- OCR y escaneo de matrícula italiana -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
-<div style="margin-top: 30px;">
-  <h2>📷 Escaneo automático de matrícula (Italia)</h2>
-  <button onclick="activarCamaraTrasera()">📸 Escanear Matrícula</button><br>
-  <video id="video-matricula" autoplay playsinline style="width: 320px; height: 240px; display:none;"></video>
-  <canvas id="canvas-matricula" width="320" height="240" style="display:none;"></canvas>
-  <div id="info-matricula-auto" style="margin-top:15px; display:none; padding:10px; background:#f0f0f0; border-radius:8px;"></div>
-</div>
+      const match = matricula.match(regexMatricula);
+      if (match) {
+        // match[1]: primera letra
+        // match[2]: símbolo especial o vacío
+        // match[3]: segunda letra
+        // match[4]: 3 números
+        // match[5]: 2 letras finales
 
-<script>
-  const dbVehiculos = {
-    "GX474WG": {
-      color: "BLANCO",
-      bastidor: "VF3YCF6FSG009044",
-      categoria: "FP",
-      itv: "08/05/2029",
-      revision: "04-06-2025"
-    },
-    "EZ456GH": {
-      color: "Azul",
-      bastidor: "VF1RFA00855234567",
-      categoria: "Turismo",
-      itv: "10/03/2026",
-      revision: "01-11-2024"
-    }
-  };
+        // Reconstituimos matrícula sin el símbolo especial
+        const matriculaLimpia =
+          match[1] + match[3] + match[4] + match[5];
 
-  let streamCamara;
-
-  function activarCamaraTrasera() {
-    const video = document.getElementById("video-matricula");
-    navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { exact: "environment" }
-      }
-    }).then(function(stream) {
-      streamCamara = stream;
-      video.srcObject = stream;
-      video.style.display = "block";
-      setTimeout(capturarYReconocerMatricula, 3000); // capturar tras 3 segundos
-    }).catch(function(error) {
-      alert("No se pudo acceder a la cámara trasera.");
-      console.error(error);
-    });
-  }
-
-  function capturarYReconocerMatricula() {
-    const video = document.getElementById("video-matricula");
-    const canvas = document.getElementById("canvas-matricula");
-    const context = canvas.getContext("2d");
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Detener cámara
-    if (streamCamara) {
-      streamCamara.getTracks().forEach(track => track.stop());
-    }
-
-    Tesseract.recognize(
-      canvas,
-      'eng',
-      {
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
-      }
-    ).then(({ data: { text } }) => {
-      const posibleMatricula = (text.match(/[A-Z]{2}\d{3}[A-Z]{2}/) || [])[0];
-      const info = document.getElementById("info-matricula-auto");
-
-      if (posibleMatricula && dbVehiculos[posibleMatricula]) {
-        const v = dbVehiculos[posibleMatricula];
-        const hoy = new Date();
-        const itvFecha = new Date(v.itv);
-        const diasITV = Math.ceil((itvFecha - hoy) / (1000 * 60 * 60 * 24));
-        info.innerHTML = `
-          <strong>Matrícula:</strong> ${posibleMatricula}<br>
-          <strong>Color:</strong> ${v.color}<br>
-          <strong>Bastidor:</strong> ${v.bastidor}<br>
-          <strong>Categoría:</strong> ${v.categoria}<br>
-          <strong>ITV:</strong> ${v.itv} (${diasITV < 0 ? `Vencida hace ${-diasITV} días` : `Faltan ${diasITV} días`})<br>
-          <strong>Última revisión:</strong> ${v.revision}
-        `;
-        info.style.display = "block";
+        const urlWhatsApp = `https://wa.me/5491130669557?text=Hola,%20mi%20matrícula%20es:%20${matriculaLimpia}`;
+        window.open(urlWhatsApp, "_blank");
       } else {
-        info.innerHTML = "<strong>Matrícula no reconocida o no encontrada.</strong>";
-        info.style.display = "block";
+        alert(
+          "La matrícula no tiene el formato válido. Ejemplo válido: GX474WG o G#X474WG."
+        );
       }
-    }).catch(err => {
-      alert("Error al procesar la imagen.");
-      console.error(err);
-    });
-  }
-</script>
-
-  
-</body>
-</html>
-
+    }
+  </script>
 </body>
 </html>
