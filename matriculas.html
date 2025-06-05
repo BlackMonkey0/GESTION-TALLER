@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Buscador de Vehículos por Matrícula</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    input, button, video, canvas {
+      margin: 10px 0;
+    }
+    input[type="text"], input[type="file"] {
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #resultado, #galeria {
+      margin-top: 20px;
+      padding: 15px;
+      background: white;
+      border-radius: 5px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+    #galeria img {
+      max-width: 120px;
+      margin: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .error { color: red; font-weight: bold; }
+    .video-container {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <h1>Buscador de Vehículos por Matrícula</h1>
+
+  <input type="file" id="fileInput" accept=".xlsx, .xls" />
+  <br>
+  <input type="text" id="inputMatricula" placeholder="Ej: GZ633DX" />
+  <button id="searchBtn">Buscar</button>
+
+  <h2>📷 Escanear Matrícula con Cámara</h2>
+  <div class="video-container">
+    <video id="video" width="320" height="240" autoplay></video>
+    <button id="captureBtn">Capturar y Buscar</button>
+    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  </div>
+
+  <h2>🖼️ Subir Imagen de Matrícula</h2>
+  <input type="file" id="uploadImage" accept="image/*" />
+
+  <div id="resultado"></div>
+
+  <h2>🗂️ Galería de Fotos (últimas 4h)</h2>
+  <div id="galeria"></div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const inputMatricula = document.getElementById('inputMatricula');
+    const searchBtn = document.getElementById('searchBtn');
+    const resultado = document.getElementById('resultado');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+    const uploadImage = document.getElementById('uploadImage');
+    const galeria = document.getElementById('galeria');
+
+    let vehiculosDB = {};
+
+    // === CARGA DE EXCEL ===
+    fileInput.addEventListener('change', event => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const hoja = workbook.Sheets[workbook.SheetNames[0]];
+        const registros = XLSX.utils.sheet_to_json(hoja);
+
+        vehiculosDB = {};
+        registros.forEach(row => {
+          const posiblesNombres = ['MATRICULA', 'Matricula', 'matricula', 'MATRÍCULA', 'Matrícula', 'matrícula'];
+          let matriculaRaw = '';
+          for (let nombre of posiblesNombres) {
+            if (row[nombre]) {
+              matriculaRaw = row[nombre];
+              break;
+            }
+          }
+          const matricula = String(matriculaRaw).toUpperCase().replace(/[\s\-]/g, '');
+          if (matricula) vehiculosDB[matricula] = row;
+        });
+
+        resultado.innerHTML = registros.length
+          ? `<p>📁 Archivo cargado correctamente (${registros.length} registros).</p>`
+          : `<p class="error">No se encontraron registros válidos.</p>`;
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // === BÚSQUEDA MANUAL ===
+    searchBtn.addEventListener('click', () => {
+      buscarMatricula(inputMatricula.value);
+    });
+
+    function buscarMatricula(rawInput) {
+      const matricula = rawInput.trim().toUpperCase().replace(/[\s\-]/g, '');
+      if (!matricula) {
+        resultado.innerHTML = `<p class="error">Introduce una matrícula válida.</p>`;
+        return;
+      }
+
+      const datos = vehiculosDB[matricula];
+      if (datos) {
+        resultado.innerHTML = `
+          <h3>Resultado para: ${matricula}</h3>
+          <ul>${Object.entries(datos).map(([k, v]) =>
+            `<li><strong>${k}:</strong> ${v}</li>`).join('')}</ul>`;
+      } else {
+        resultado.innerHTML = `<p class="error">No se encontraron datos para: ${matricula}</p>`;
+      }
+    }
+
+    // === CÁMARA EN VIVO ===
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(err => console.error("Error al acceder a la cámara:", err));
+
+    captureBtn.addEventListener('click', () => {
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => procesarImagen(blob), 'image/jpeg');
+    });
+
+    // === SUBIR IMAGEN ===
+    uploadImage.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) procesarImagen(file);
+    });
+
+    // === PROCESAMIENTO OCR ===
+    function procesarImagen(blob) {
+      const timestamp = Date.now();
+      const reader = new FileReader();
+      reader.onload = function () {
+        const base64 = reader.result;
+        guardarImagenEnGaleria(base64, timestamp);
+        Tesseract.recognize(base64, 'eng', {
+          logger: m => console.log(m)
+        }).then(({ data: { text } }) => {
+          const posibleMatricula = text.toUpperCase().match(/[A-Z]{1,2}\d{3,4}[A-Z]{1,3}/);
+          if (posibleMatricula) {
+            buscarMatricula(posibleMatricula[0]);
+          } else {
+            resultado.innerHTML = `<p class="error">No se detectó ninguna matrícula válida en la imagen.</p>`;
+          }
+        });
+      };
+      reader.readAsDataURL(blob);
+    }
+
+    // === GALERÍA DE FOTOS ===
+    function guardarImagenEnGaleria(base64, timestamp) {
+      const imagenes = JSON.parse(localStorage.getItem('galeriaFotos') || '[]');
+      imagenes.push({ base64, timestamp });
+      localStorage.setItem('galeriaFotos', JSON.stringify(imagenes));
+      mostrarGaleria();
+    }
+
+    function mostrarGaleria() {
+      const imagenes = JSON.parse(localStorage.getItem('galeriaFotos') || '[]');
+      const ahora = Date.now();
+      const filtradas = imagenes.filter(img => ahora - img.timestamp < 4 * 60 * 60 * 1000);
+      localStorage.setItem('galeriaFotos', JSON.stringify(filtradas));
+      galeria.innerHTML = filtradas.map(img =>
+        `<img src="${img.base64}" alt="matrícula">`).join('');
+    }
+
+    mostrarGaleria();
+  </script>
+</body>
+</html>
