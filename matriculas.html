@@ -2,77 +2,47 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Buscador de Vehículos por Matrícula</title>
+  <title>Buscador de Vehículos por Matrícula Italiana</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      background: #f4f6f8;
       color: #333;
       padding: 20px;
     }
-
-    h1, h2 {
-      color: #d32f2f;
+    h1, h2 { color: #c62828; }
+    input, button, video, canvas { margin: 10px 0; }
+    input[type="text"], input[type="file"] {
+      padding: 10px; font-size: 16px;
+      border: 1px solid #ccc; border-radius: 5px; width: 250px;
     }
-
-    input, button, video, canvas, select {
-      margin: 10px 0;
-    }
-
-    input[type="text"], input[type="file"], input[type="date"] {
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
     button {
-      padding: 10px 20px;
-      background: #e57373;
-      color: white;
-      border: none;
-      border-radius: 5px;
+      padding: 10px 20px; background: #e53935;
+      color: white; border: none; border-radius: 5px;
       cursor: pointer;
     }
-
-    button:hover {
-      background: #d32f2f;
-    }
-
+    button:hover { background: #c62828; }
     #resultado, #galeria {
-      margin-top: 20px;
-      padding: 15px;
-      background: #fff;
-      border-radius: 5px;
-      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+      margin-top: 20px; padding: 15px;
+      background: #fff; border-radius: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-
     #galeria img {
-      max-width: 120px;
-      margin: 5px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
+      max-width: 120px; margin: 5px;
+      border-radius: 4px; border: 1px solid #ccc;
     }
-
-    .error {
-      color: #d32f2f;
-      font-weight: bold;
-    }
-
-    .video-container {
-      display: flex;
-      flex-direction: column;
-    }
+    .error { color: #c62828; font-weight: bold; }
+    .video-container { display: flex; flex-direction: column; }
   </style>
 </head>
 <body>
-  <h1>Buscador de Vehículos por Matrícula</h1>
+  <h1>Buscador de Vehículos por Matrícula Italiana 🇮🇹</h1>
 
   <input type="file" id="fileInput" accept=".xlsx, .xls" />
   <br>
-  <input type="text" id="inputMatricula" placeholder="Ej: GZ633DX" />
+  <input type="text" id="inputMatricula" placeholder="Ej: AB123CD" />
   <button id="searchBtn">Buscar</button>
 
   <h2>📷 Escanear Matrícula con Cámara</h2>
@@ -100,14 +70,12 @@
     const captureBtn = document.getElementById('captureBtn');
     const uploadImage = document.getElementById('uploadImage');
     const galeria = document.getElementById('galeria');
-
     let vehiculosDB = {};
 
-    // === CARGA DE EXCEL CON LIMPIEZA DE CLAVES ===
+    // === CARGA DE EXCEL ===
     fileInput.addEventListener('change', event => {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = e => {
         const data = new Uint8Array(e.target.result);
@@ -119,96 +87,80 @@
         registros.forEach(row => {
           let matriculaRaw = '';
           for (let key in row) {
-            const normalizedKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, '').toUpperCase();
-            if (normalizedKey.includes("MATRICULA")) {
+            const cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, '').toUpperCase();
+            if (cleanKey.includes("MATRICULA")) {
               matriculaRaw = row[key];
               break;
             }
           }
-
-          const matricula = String(matriculaRaw)
+          const matriculaLimpia = String(matriculaRaw)
             .normalize("NFD").replace(/[\u0300-\u036f]/g, '')
             .toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-          if (matricula) vehiculosDB[matricula] = row;
+          if (matriculaLimpia) vehiculosDB[matriculaLimpia] = row;
         });
 
         resultado.innerHTML = registros.length
-          ? `<p>📁 Archivo cargado correctamente (${registros.length} registros).</p>`
-          : `<p class="error">No se encontraron registros válidos.</p>`;
+          ? `<p>📁 Archivo cargado: ${registros.length} registros.</p>`
+          : `<p class="error">❌ No se encontraron registros válidos.</p>`;
       };
       reader.readAsArrayBuffer(file);
     });
 
     // === BÚSQUEDA MANUAL ===
-    searchBtn.addEventListener('click', () => {
-      buscarMatricula(inputMatricula.value);
-    });
+    searchBtn.addEventListener('click', () => buscarMatricula(inputMatricula.value));
 
-    function buscarMatricula(rawInput) {
-      const matricula = rawInput.trim()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, '')
-        .toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-      if (!matricula) {
-        resultado.innerHTML = `<p class="error">Introduce una matrícula válida.</p>`;
+    function buscarMatricula(input) {
+      const matricula = input.toUpperCase().replace(/[·•\s]/g, '').replace(/[^A-Z0-9]/g, '');
+      if (!/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/.test(matricula)) {
+        resultado.innerHTML = `<p class="error">⚠️ Formato inválido. Usa AA123BB.</p>`;
         return;
       }
 
-      const datos = vehiculosDB[matricula];
-      if (datos) {
+      const data = vehiculosDB[matricula];
+      if (data) {
         resultado.innerHTML = `
-          <h3>Resultado para: ${matricula}</h3>
-          <ul>${Object.entries(datos).map(([k, v]) =>
+          <h3>Resultado para: ${matricula.replace(/([A-Z]{2})([0-9]{3})([A-Z]{2})/, '$1 • $2 $3')}</h3>
+          <ul>${Object.entries(data).map(([k, v]) =>
             `<li><strong>${k}:</strong> ${
-              /fecha/i.test(k) || /ITV/i.test(k)
-                ? formatFecha(v)
-                : v
+              /fecha|itv/i.test(k) ? formatFecha(v) : v
             }</li>`).join('')}</ul>`;
       } else {
-        resultado.innerHTML = `<p class="error">No se encontraron datos para: ${matricula}</p>`;
+        resultado.innerHTML = `<p class="error">❌ Matrícula no encontrada: ${matricula}</p>`;
       }
     }
 
     function formatFecha(fecha) {
-      try {
-        const d = new Date(fecha);
-        if (!isNaN(d)) {
-          return d.toISOString().split('T')[0];
+      if (typeof fecha === 'number') {
+        const parsed = XLSX.SSF.parse_date_code(fecha);
+        if (parsed) {
+          const { y, m, d } = parsed;
+          return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         }
-      } catch {}
-      return fecha;
+      }
+      const d = new Date(fecha);
+      return isNaN(d) ? fecha : d.toISOString().split('T')[0];
     }
 
     // === CÁMARA ===
     navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { exact: "environment" }
-      }
+      video: { facingMode: { ideal: "environment" } }
     })
     .then(stream => video.srcObject = stream)
-    .catch(err => {
-      console.warn("Fallo en cámara trasera, usando por defecto:", err);
-      return navigator.mediaDevices.getUserMedia({ video: true });
-    })
-    .then(stream => {
-      if (stream) video.srcObject = stream;
-    });
+    .catch(() => navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream));
 
-    // === CAPTURAR FOTO ===
     captureBtn.addEventListener('click', () => {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(blob => procesarImagen(blob), 'image/jpeg');
     });
 
-    // === SUBIR IMAGEN ===
     uploadImage.addEventListener('change', e => {
       const file = e.target.files[0];
       if (file) procesarImagen(file);
     });
 
-    // === PROCESAMIENTO OCR CON LIMPIEZA ===
+    // === OCR PROCESAMIENTO ===
     function procesarImagen(blob) {
       const timestamp = Date.now();
       const reader = new FileReader();
@@ -218,19 +170,23 @@
         Tesseract.recognize(base64, 'eng', {
           logger: m => console.log(m)
         }).then(({ data: { text } }) => {
-          const limpio = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
-          const posibleMatricula = limpio.match(/[A-Z]{2,3}[0-9]{2,4}[A-Z]{1,3}/);
-          if (posibleMatricula) {
-            buscarMatricula(posibleMatricula[0]);
+          let limpio = text.toUpperCase()
+            .replace(/[•·]/g, '') // símbolo italiano
+            .replace(/[^A-Z0-9]/g, '')
+            .replace(/0/g, 'O').replace(/1/g, 'I'); // Correcciones OCR
+
+          const posible = limpio.match(/[A-Z]{2}[0-9]{3}[A-Z]{2}/);
+          if (posible && posible[0]) {
+            buscarMatricula(posible[0]);
           } else {
-            resultado.innerHTML = `<p class="error">No se detectó ninguna matrícula válida en la imagen.</p>`;
+            resultado.innerHTML = `<p class="error">❌ No se detectó ninguna matrícula válida en la imagen.</p>`;
           }
         });
       };
       reader.readAsDataURL(blob);
     }
 
-    // === GALERÍA DE FOTOS ===
+    // === GALERÍA ===
     function guardarImagenEnGaleria(base64, timestamp) {
       const imagenes = JSON.parse(localStorage.getItem('galeriaFotos') || '[]');
       imagenes.push({ base64, timestamp });
@@ -241,9 +197,8 @@
     function mostrarGaleria() {
       const imagenes = JSON.parse(localStorage.getItem('galeriaFotos') || '[]');
       const ahora = Date.now();
-      const filtradas = imagenes.filter(img => ahora - img.timestamp < 4 * 60 * 60 * 1000);
-      localStorage.setItem('galeriaFotos', JSON.stringify(filtradas));
-      galeria.innerHTML = filtradas.map(img =>
+      const recientes = imagenes.filter(img => ahora - img.timestamp < 4 * 60 * 60 * 1000);
+      galeria.innerHTML = recientes.map(img =>
         `<img src="${img.base64}" alt="matrícula">`).join('');
     }
 
