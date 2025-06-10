@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Buscador de Vehículos por Matrícula Italiana</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Reconocimiento de Matrículas Italianas con IA</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
       color: #333;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
     h1, h2 { color: #c62828; }
-    input, button, video, canvas { margin: 10px 0; }
-    input[type="text"], input[type="file"] {
+    input, button, img, video, canvas { margin: 10px 0; }
+    input[type="file"] {
       padding: 10px; font-size: 16px;
-      border: 1px solid #ccc; border-radius: 5px; width: 250px;
+      border: 1px solid #ccc; border-radius: 5px;
     }
     button {
       padding: 10px 20px; background: #e53935;
@@ -24,185 +26,166 @@
       cursor: pointer;
     }
     button:hover { background: #c62828; }
-    #resultado, #galeria {
+    #resultado {
       margin-top: 20px; padding: 15px;
       background: #fff; border-radius: 5px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    #galeria img {
-      max-width: 120px; margin: 5px;
-      border-radius: 4px; border: 1px solid #ccc;
+      width: 80%;
+      max-width: 500px;
     }
     .error { color: #c62828; font-weight: bold; }
-    .video-container { display: flex; flex-direction: column; }
+
+    /* Estilos para la cámara */
+    #videoContainer {
+      width: 100%;
+      max-width: 500px;
+      margin: 10px auto;
+      border: 1px solid #ddd;
+      background-color: black;
+      position: relative;
+    }
+    #videoElement {
+      width: 100%;
+      height: auto;
+      display: block; /* Para eliminar el espacio extra debajo del video */
+    }
+    #canvasElement {
+      display: none; /* Ocultar el canvas inicialmente */
+    }
+    #cameraControls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Buscador de Vehículos por Matrícula Italiana 🇮🇹</h1>
+  <h1>📸 Lector de Matrículas Italianas (con IA)</h1>
+  <p>Sube una foto o usa la cámara para analizar una matrícula italiana:</p>
 
-  <input type="file" id="fileInput" accept=".xlsx, .xls" />
-  <br>
-  <input type="text" id="inputMatricula" placeholder="Ej: AB123CD" />
-  <button id="searchBtn">Buscar</button>
+  <input type="file" id="uploadImage" accept="image/*">
+  <button onclick="enviarImagen('upload')">Reconocer Matrícula (Archivo)</button>
 
-  <h2>📷 Escanear Matrícula con Cámara</h2>
-  <div class="video-container">
-    <video id="video" width="320" height="240" autoplay></video>
-    <button id="captureBtn">Capturar y Buscar</button>
-    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <hr style="width: 80%; margin: 20px 0;">
+
+  <h2>🎥 Usar Cámara</h2>
+  <button onclick="iniciarCamara()">Iniciar Cámara</button>
+  <div id="videoContainer">
+    <video id="videoElement" autoplay></video>
   </div>
-
-  <h2>🖼️ Subir Imagen de Matrícula</h2>
-  <input type="file" id="uploadImage" accept="image/*" />
-
-  <div id="resultado"></div>
-
-  <h2>🗂️ Galería de Fotos (últimas 4h)</h2>
-  <div id="galeria"></div>
+  <div id="cameraControls">
+    <button onclick="tomarFoto()" id="takeFotoBtn" style="display: none;">Tomar Foto</button>
+    <button onclick="detenerCamara()" id="stopCameraBtn" style="display: none;">Detener Cámara</button>
+  </div>
+  <canvas id="canvasElement" style="display: none;"></canvas> <div id="resultado"></div>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const inputMatricula = document.getElementById('inputMatricula');
-    const searchBtn = document.getElementById('searchBtn');
-    const resultado = document.getElementById('resultado');
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const captureBtn = document.getElementById('captureBtn');
-    const uploadImage = document.getElementById('uploadImage');
-    const galeria = document.getElementById('galeria');
-    let vehiculosDB = {};
+    // **IMPORTANTE**: Reemplaza esto con tu propio token de Plate Recognizer.
+    // Este token es un ejemplo y no funcionará.
+    const API_TOKEN = "123dd249332b4bdc8f555bbdf036d316ad9083d1";
 
-    // === CARGA DE EXCEL ===
-    fileInput.addEventListener('change', event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const hoja = workbook.Sheets[workbook.SheetNames[0]];
-        const registros = XLSX.utils.sheet_to_json(hoja);
+    const video = document.getElementById('videoElement');
+    const canvas = document.getElementById('canvasElement');
+    const takeFotoBtn = document.getElementById('takeFotoBtn');
+    const stopCameraBtn = document.getElementById('stopCameraBtn');
+    const resultadoDiv = document.getElementById('resultado');
+    let stream; // Para almacenar el stream de la cámara
 
-        vehiculosDB = {};
-        registros.forEach(row => {
-          let matriculaRaw = '';
-          for (let key in row) {
-            const cleanKey = key.normalize("NFD").replace(/[\u0300-\u036f]/g, '').toUpperCase();
-            if (cleanKey.includes("MATRICULA")) {
-              matriculaRaw = row[key];
-              break;
-            }
-          }
-          const matriculaLimpia = String(matriculaRaw)
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, '')
-            .toUpperCase().replace(/[^A-Z0-9]/g, '');
-          if (matriculaLimpia) vehiculosDB[matriculaLimpia] = row;
-        });
+    async function iniciarCamara() {
+      resultadoDiv.innerHTML = '<p>Iniciando cámara...</p>';
+      try {
+        // Pedir permiso para la cámara, preferiendo la trasera (environment)
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        takeFotoBtn.style.display = 'inline-block';
+        stopCameraBtn.style.display = 'inline-block';
+        resultadoDiv.innerHTML = ''; // Limpiar mensaje de inicio
+      } catch (err) {
+        console.error("Error al acceder a la cámara: ", err);
+        resultadoDiv.innerHTML = '<p class="error">❌ No se pudo iniciar la cámara. Asegúrate de dar permisos.</p>';
+      }
+    }
 
-        resultado.innerHTML = registros.length
-          ? `<p>📁 Archivo cargado: ${registros.length} registros.</p>`
-          : `<p class="error">❌ No se encontraron registros válidos.</p>`;
-      };
-      reader.readAsArrayBuffer(file);
-    });
+    function tomarFoto() {
+      if (!stream) {
+        resultadoDiv.innerHTML = '<p class="error">⚠️ La cámara no está activa.</p>';
+        return;
+      }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // === BÚSQUEDA MANUAL ===
-    searchBtn.addEventListener('click', () => buscarMatricula(inputMatricula.value));
+      // Convertir la imagen del canvas a un Blob (equivalente a un archivo)
+      canvas.toBlob(blob => {
+        enviarImagen('camera', blob);
+      }, 'image/jpeg'); // Puedes elegir 'image/png' si prefieres
+    }
 
-    function buscarMatricula(input) {
-      const matricula = input.toUpperCase().replace(/[·•\s]/g, '').replace(/[^A-Z0-9]/g, '');
-      if (!/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/.test(matricula)) {
-        resultado.innerHTML = `<p class="error">⚠️ Formato inválido. Usa AA123BB.</p>`;
+    function detenerCamara() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop()); // Detener todas las pistas (video, audio si hubiera)
+        video.srcObject = null;
+        video.style.display = 'none';
+        takeFotoBtn.style.display = 'none';
+        stopCameraBtn.style.display = 'none';
+        resultadoDiv.innerHTML = '<p>Cámara detenida.</p>';
+      }
+    }
+
+
+    function enviarImagen(source, blob = null) {
+      const formData = new FormData();
+      const resultado = document.getElementById("resultado");
+
+      if (source === 'upload') {
+        const input = document.getElementById("uploadImage");
+        if (!input.files.length) {
+          resultado.innerHTML = '<p class="error">⚠️ Selecciona una imagen primero.</p>';
+          return;
+        }
+        formData.append("upload", input.files[0]);
+      } else if (source === 'camera' && blob) {
+        formData.append("upload", blob, "camera_capture.jpeg"); // El tercer argumento es el nombre del archivo
+      } else {
+        resultado.innerHTML = '<p class="error">⚠️ Error en la fuente de la imagen.</p>';
         return;
       }
 
-      const data = vehiculosDB[matricula];
-      if (data) {
-        resultado.innerHTML = `
-          <h3>Resultado para: ${matricula.replace(/([A-Z]{2})([0-9]{3})([A-Z]{2})/, '$1 • $2 $3')}</h3>
-          <ul>${Object.entries(data).map(([k, v]) =>
-            `<li><strong>${k}:</strong> ${
-              /fecha|itv/i.test(k) ? formatFecha(v) : v
-            }</li>`).join('')}</ul>`;
-      } else {
-        resultado.innerHTML = `<p class="error">❌ Matrícula no encontrada: ${matricula}</p>`;
-      }
-    }
+      // Añadir el país para filtrar la detección a matrículas italianas
+      formData.append("country", "it"); // "it" para Italia
 
-    function formatFecha(fecha) {
-      if (typeof fecha === 'number') {
-        const parsed = XLSX.SSF.parse_date_code(fecha);
-        if (parsed) {
-          const { y, m, d } = parsed;
-          return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      resultado.innerHTML = "<p>⏳ Procesando imagen...</p>";
+
+      fetch("https://api.platerecognizer.com/v1/plate-reader/", {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${API_TOKEN}`
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        if (data.results && data.results.length > 0) {
+          const placa = data.results[0].plate.toUpperCase();
+          resultado.innerHTML = `<h2>✅ Matrícula detectada:</h2><p style='font-size:20px'><strong>${placa}</strong></p>`;
+          // Aquí llamarías a una función para buscar en tu "base de datos" de Excel
+          // buscarInformacionMatricula(placa);
+        } else {
+          resultado.innerHTML = '<p class="error">❌ No se detectó ninguna matrícula en la imagen.</p>';
         }
-      }
-      const d = new Date(fecha);
-      return isNaN(d) ? fecha : d.toISOString().split('T')[0];
+      })
+      .catch(err => {
+        console.error(err);
+        resultado.innerHTML = '<p class="error">⚠️ Error al procesar la imagen.</p>';
+      });
     }
 
-    // === CÁMARA ===
-    navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } }
-    })
-    .then(stream => video.srcObject = stream)
-    .catch(() => navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => video.srcObject = stream));
-
-    captureBtn.addEventListener('click', () => {
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => procesarImagen(blob), 'image/jpeg');
-    });
-
-    uploadImage.addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (file) procesarImagen(file);
-    });
-
-    // === OCR PROCESAMIENTO ===
-    function procesarImagen(blob) {
-      const timestamp = Date.now();
-      const reader = new FileReader();
-      reader.onload = function () {
-        const base64 = reader.result;
-        guardarImagenEnGaleria(base64, timestamp);
-        Tesseract.recognize(base64, 'eng', {
-          logger: m => console.log(m)
-        }).then(({ data: { text } }) => {
-          let limpio = text.toUpperCase()
-            .replace(/[•·]/g, '') // símbolo italiano
-            .replace(/[^A-Z0-9]/g, '')
-            .replace(/0/g, 'O').replace(/1/g, 'I'); // Correcciones OCR
-
-          const posible = limpio.match(/[A-Z]{2}[0-9]{3}[A-Z]{2}/);
-          if (posible && posible[0]) {
-            buscarMatricula(posible[0]);
-          } else {
-            resultado.innerHTML = `<p class="error">❌ No se detectó ninguna matrícula válida en la imagen.</p>`;
-          }
-        });
-      };
-      reader.readAsDataURL(blob);
-    }
-
-    // === GALERÍA ===
-    function guardarImagenEnGaleria(base64, timestamp) {
-      const imagenes = JSON.parse(localStorage.getItem('galeriaFotos') || '[]');
-      imagenes.push({ base64, timestamp });
-      localStorage.setItem('galeriaFotos', JSON.stringify(imagenes));
-      mostrarGaleria();
-    }
-
-    function mostrarGaleria() {
-      const imagenes = JSON.parse(localStorage.getItem('galeriaFotos') || '[]');
-      const ahora = Date.now();
-      const recientes = imagenes.filter(img => ahora - img.timestamp < 4 * 60 * 60 * 1000);
-      galeria.innerHTML = recientes.map(img =>
-        `<img src="${img.base64}" alt="matrícula">`).join('');
-    }
-
-    mostrarGaleria();
+    // Asegurarse de detener la cámara si el usuario navega fuera de la página
+    window.addEventListener('beforeunload', detenerCamara);
   </script>
 </body>
 </html>
