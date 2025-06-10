@@ -235,7 +235,7 @@
 <body>
   <div class="container">
     <h1>📸 Lector de Matrículas Italianas (IA)</h1>
-    <p>Sube o toma la foto de una matrícula. La información de los vehículos está siempre actualizada automáticamente desde Google Sheets.</p>
+    <p></p>
     <input type="file" id="uploadImage" accept="image/*" />
     <button onclick="enviarImagen()" class="main-btn">Reconocer Matrícula</button>
 
@@ -312,11 +312,25 @@
       });
     }
 
+    // Versión robusta: encuentra la columna de matrícula y normaliza espacios/tildes
     function buscarVehiculo(placa) {
+      if (!dbVehiculos.length) {
+        document.getElementById("resultado").innerHTML += "<p>🚫 Base de datos vacía.</p>";
+        return;
+      }
+      // Detectar la columna de matrícula (ignora tildes, espacios y may/min)
       const keys = Object.keys(dbVehiculos[0] || {});
-      const matriculaKey = keys.find(k => k.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === "matricula");
+      const matriculaKey = keys.find(k =>
+        k.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase().replace(/\s+/g, '') === "matricula"
+      );
+      if (!matriculaKey) {
+        document.getElementById("resultado").innerHTML += "<p>🚫 No se encontró la columna de matrícula en la base de datos.</p>";
+        return;
+      }
+      const placaLimpia = (placa || "").toUpperCase().replace(/\s+/g, "");
       const vehiculo = dbVehiculos.find(v =>
-        (v[matriculaKey] || "").toUpperCase() === placa
+        ((v[matriculaKey] || "").toUpperCase().replace(/\s+/g, "") === placaLimpia)
       );
       if (vehiculo) {
         let html = "<h3>Información del Vehículo:</h3><ul class='info-list'>";
