@@ -4,177 +4,132 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reconocimiento de Matrículas Italianas con IA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(120deg, #e3f0fc 0%, #f8f6ff 100%);
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      background: linear-gradient(to right, #ece9e6, #ffffff);
       color: #242121;
-      padding: 0;
+      padding: 20px;
       margin: 0;
-      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      min-height: 100vh;
     }
-
     .container {
-      max-width: 700px;
-      width: 100%;
-      background-color: #fff;
-      padding: 34px 22px 30px 22px;
-      border-radius: 18px;
-      box-shadow: 0 10px 32px rgba(44, 62, 80, 0.10);
-      margin-top: 34px;
-      margin-bottom: 34px;
-      box-sizing: border-box;
+        max-width: 700px;
+        width: 100%;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        margin-top: 20px;
+        box-sizing: border-box;
     }
-
-    h1 {
+    h1, h2 {
       color: #b71c1c;
-      margin-bottom: 22px;
-      font-weight: 700;
-      font-size: 2.25em;
-      letter-spacing: 1.5px;
-      background: linear-gradient(90deg, #c62828 30%, #ff7043 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    h2 {
-      font-size: 1.4em;
-      color: #d32f2f;
+      margin-bottom: 20px;
       font-weight: 600;
-      margin-top: 30px;
-      margin-bottom: 16px;
-      border-bottom: 2px solid #eee;
-      padding-bottom: 8px;
+      text-align: center;
     }
-
+    h1 {
+        font-size: 2.2em;
+        letter-spacing: 0.02em;
+    }
+    h2 {
+        font-size: 1.6em;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-top: 30px;
+        color: #d32f2f;
+    }
     p {
-      margin-bottom: 15px;
-      line-height: 1.55;
-      color: #555;
-      font-size: 1.09em;
+        margin-bottom: 15px;
+        line-height: 1.6;
+        color: #555;
     }
-
-    input[type="file"] {
-      display: block;
-      margin: 18px auto 16px auto;
-      padding: 13px 15px;
-      border: 2px dashed #cfd8dc;
-      border-radius: 8px;
-      background-color: #f4f5fa;
-      font-size: 1em;
-      color: #666;
-      width: 96%;
-      max-width: 420px;
-      cursor: pointer;
-      transition: border-color 0.3s, background-color 0.3s;
-      box-shadow: 0 1px 4px rgba(210, 62, 62, 0.04);
-    }
-
-    input[type="file"]:hover {
-      border-color: #e53935;
-      background-color: #ffebee;
-    }
-
-    button.main-btn {
-      padding: 14px 36px;
-      background: linear-gradient(90deg, #e53935 60%, #c62828 100%);
+    button {
+      padding: 12px 25px;
+      background: #e53935;
       color: white;
       border: none;
-      border-radius: 9px;
+      border-radius: 8px;
+      cursor: pointer;
       font-size: 1.1em;
-      font-weight: 700;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #c62828;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+    button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 15px;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      font-size: 1em;
+      color: #666;
+      width: calc(100% - 40px);
+      max-width: 400px;
       cursor: pointer;
-      margin: 12px 8px 24px 8px;
-      box-shadow: 0 3px 14px rgba(198,40,40,0.10);
-      transition: background 0.2s, transform 0.13s;
-      letter-spacing: .6px;
-      outline: none;
+      transition: border-color 0.3s ease, background-color 0.3s ease;
     }
-
-    button.main-btn:hover, button.camera-btn:hover {
-      background: linear-gradient(90deg, #d32f2f 40%, #ff8a65 100%);
-      transform: translateY(-2px) scale(1.04);
-      box-shadow: 0 8px 22px rgba(183,28,28,0.13);
+    input[type="file"]:hover {
+        border-color: #e53935;
+        background-color: #ffebee;
     }
-
-    .camera-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    button.camera-btn {
-      padding: 13px 26px;
-      margin: 12px 8px;
-      background: #fafafa;
-      color: #d32f2f;
-      border: 1.5px solid #d32f2f;
-      border-radius: 7px;
-      font-size: 1.04em;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s, border 0.2s;
-      box-shadow: 0 2px 8px rgba(198,40,40,0.04);
-      letter-spacing: .5px;
-    }
-
-    button.camera-btn:active {
-      background: #f7d7d7;
-      color: #b71c1c;
-    }
-
     #videoElement {
       width: 100%;
       max-width: 500px;
       height: auto;
-      border-radius: 12px;
-      box-shadow: 0 5px 22px rgba(0,0,0,0.12);
-      background: #121212;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      background-color: #000;
       display: block;
-      margin: 18px auto 2px auto;
+      margin: 20px auto;
     }
-
     #canvasElement {
-      display: none;
+        display: none;
     }
-
     #resultado {
-      margin-top: 26px;
-      padding: 22px 16px 20px 20px;
+      margin-top: 30px;
+      padding: 25px;
       background: #ffffff;
-      border-radius: 13px;
-      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.07);
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
       width: calc(100% - 60px);
       max-width: 500px;
       text-align: left;
       border-left: 5px solid #d32f2f;
     }
-
     #resultado h3 {
-      color: #b71c1c;
-      margin-top: 0;
-      margin-bottom: 15px;
-      font-size: 1.22em;
+        color: #b71c1c;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.3em;
     }
-
     #resultado p {
-      margin: 10px 0;
-      font-size: 1.09em;
-      color: #444;
+        margin: 10px 0;
+        font-size: 1.1em;
+        color: #444;
     }
-
     #resultado strong {
-      color: #d32f2f;
+        color: #d32f2f;
     }
-
     .info-list {
       list-style: none;
       padding: 0;
-      margin-top: 12px;
+      margin-top: 15px;
     }
     .info-list li {
       margin-bottom: 8px;
@@ -186,15 +141,14 @@
       color: #e53935;
       position: absolute;
       left: 0;
-      font-size: 1.17em;
+      font-size: 1.2em;
       line-height: 1;
     }
     .info-list strong {
       display: inline-block;
-      min-width: 130px;
+      min-width: 150px;
       color: #333;
     }
-
     .error {
       color: #d32f2f;
       font-weight: bold;
@@ -203,7 +157,6 @@
       border-radius: 5px;
       border: 1px solid #d32f2f;
     }
-
     .success {
       color: #28a745;
       font-weight: bold;
@@ -212,75 +165,45 @@
       border-radius: 5px;
       border: 1px solid #28a745;
     }
-
     hr {
-      border: 0;
-      height: 1px;
-      background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
-      margin: 40px 0;
-      width: 80%;
-      max-width: 600px;
-    }
-
-    @media (max-width: 700px) {
-      h1 { font-size: 1.3em; }
-      h2 { font-size: 1.06em; }
-      .container { padding: 13px 2vw 10px 2vw; }
-      #resultado { padding: 11px 2vw 10px 2vw; }
-      button.main-btn, button.camera-btn { padding: 10px 10px; font-size: .99em;}
-      #videoElement { max-width: 99vw; }
+        border: 0;
+        height: 1px;
+        background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+        margin: 40px 0;
+        width: 80%;
+        max-width: 600px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📸 Lector de Matrículas Italianas (IA)</h1>
-    <p></p>
-    <input type="file" id="uploadImage" accept="image/*" />
-    <button onclick="enviarImagen()" class="main-btn">Reconocer Matrícula</button>
-
-    <h2>🎥 Cámara</h2>
-    <div class="camera-section">
-      <button onclick="iniciarCamara()" id="startCameraBtn" class="main-btn">Iniciar Cámara</button>
-      <video id="videoElement" autoplay playsinline style="display:none;"></video>
-      <button id="takeFotoBtn" onclick="tomarFoto()" class="camera-btn" style="display:none;">📸 Tomar Foto</button>
-      <button id="stopCameraBtn" onclick="detenerCamara()" class="camera-btn" style="display:none;">Detener Cámara</button>
-      <canvas id="canvasElement" style="display:none;"></canvas>
-      <img id="capturedImage" style="display:none;max-width:100%;margin:15px auto 0 auto;border-radius:10px;box-shadow: 0 2px 9px rgba(0,0,0,0.11);" />
-    </div>
-    <div id="resultado"></div>
-  </div>
-
+  <h1>📸 Lector de Matrículas Italianas (IA)</h1>
+  <p>Sube o toma la imagen de la matrícula:</p>
+  <input type="file" id="uploadImage" accept="image/*" />
+  <button onclick="enviarImagen()">Reconocer Matrícula</button>
+  <h2>🎥 Cámara</h2>
+  <button onclick="iniciarCamara()">Iniciar Cámara</button>
+  <video id="videoElement" autoplay style="width:100%; max-width:500px;"></video>
+  <button onclick="tomarFoto()">📸 Tomar Foto</button>
+  <button onclick="detenerCamara()">Detener Cámara</button>
+  <canvas id="canvasElement" style="display:none;"></canvas>
+  <div id="resultado"></div>
   <script>
-    const SHEET_ID = "2PACX-1vTZNSWW64H8RLMspKFvoH6EtUWmSQw-dGJ8dJL70iJb95Xl7aB2JSBF8FlpeKKr3TlIwW01BCWaOftw";
-    const SHEET_GID = "0";
     const API_TOKEN = "123dd249332b4bdc8f555bbdf036d316ad9083d1";
+    // Usa aquí el enlace RAW de tu JSON en GitHub
+    const JSON_DB_URL = "https://raw.githubusercontent.com/BlackMonkey0/MATRICULAS/main/CRM(FLOTA).json";
     let dbVehiculos = [];
-    let stream;
 
-    function fetchVehiculosDesdeGoogleSheets(callback) {
-      const url = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`;
-      fetch(url)
-        .then(res => res.text())
-        .then(text => {
-          const lines = text.trim().split("\n");
-          const headers = lines[0].split(",").map(h => h.trim());
-          const data = lines.slice(1).map(line => {
-            const values = line.split(",");
-            let obj = {};
-            headers.forEach((h, i) => {
-              obj[h] = values[i] ? values[i].trim() : "";
-            });
-            return obj;
-          });
-          dbVehiculos = data;
-          if (callback) callback(data);
-        })
-        .catch(err => {
-          document.getElementById("resultado").innerHTML = "<p class='error'>❌ Error al cargar la base de datos desde Google Sheets.</p>";
-        });
+    // Cargar la base de datos automáticamente desde GitHub
+    async function cargarBaseDatos() {
+      try {
+        const res = await fetch(JSON_DB_URL);
+        dbVehiculos = await res.json();
+        console.log("Base de datos cargada:", dbVehiculos);
+      } catch (e) {
+        mostrarMensaje("❌ Error al cargar la base de datos.", true);
+      }
     }
-    fetchVehiculosDesdeGoogleSheets();
+    cargarBaseDatos();
 
     function enviarImagen() {
       const input = document.getElementById("uploadImage");
@@ -307,25 +230,24 @@
           mostrarMensaje("❌ No se detectó ninguna matrícula en la imagen.", true);
         }
       })
-      .catch(() => {
+      .catch(err => {
         mostrarMensaje("⚠️ Error al procesar la imagen.", true);
       });
     }
 
-    // Versión robusta: encuentra la columna de matrícula y normaliza espacios/tildes
     function buscarVehiculo(placa) {
-      if (!dbVehiculos.length) {
-        document.getElementById("resultado").innerHTML += "<p>🚫 Base de datos vacía.</p>";
+      if (!dbVehiculos || dbVehiculos.length === 0) {
+        mostrarMensaje("❌ Base de datos vacía.", true);
         return;
       }
-      // Detectar la columna de matrícula (ignora tildes, espacios y may/min)
+      // Búsqueda robusta por clave "MATRICULA" (sin tildes ni espacios)
       const keys = Object.keys(dbVehiculos[0] || {});
       const matriculaKey = keys.find(k =>
         k.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase().replace(/\s+/g, '') === "matricula"
+         .toLowerCase().replace(/\s+/g, '').replace('í','i') === "matricula"
       );
       if (!matriculaKey) {
-        document.getElementById("resultado").innerHTML += "<p>🚫 No se encontró la columna de matrícula en la base de datos.</p>";
+        mostrarMensaje("❌ No se encontró la columna de matrícula en la base de datos.", true);
         return;
       }
       const placaLimpia = (placa || "").toUpperCase().replace(/\s+/g, "");
@@ -348,33 +270,22 @@
       document.getElementById("resultado").innerHTML = `<p style="color:${error ? 'red' : 'black'}">${msg}</p>`;
     }
 
-    // 📷 Cámara con control de botones y foto
+    // 📷 Cámara
+    let stream;
     async function iniciarCamara() {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
         document.getElementById("videoElement").srcObject = stream;
-        document.getElementById("videoElement").style.display = "block";
-        document.getElementById("takeFotoBtn").style.display = "inline-block";
-        document.getElementById("stopCameraBtn").style.display = "inline-block";
-        document.getElementById("startCameraBtn").style.display = "none";
-        document.getElementById("capturedImage").style.display = "none";
-        document.getElementById("canvasElement").style.display = "none";
       } catch (err) {
         mostrarMensaje("❌ No se pudo acceder a la cámara.", true);
       }
     }
-
     function tomarFoto() {
       const video = document.getElementById("videoElement");
       const canvas = document.getElementById("canvasElement");
-      const img = document.getElementById("capturedImage");
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d").drawImage(video, 0, 0);
-
-      // Mostrar la imagen capturada
-      img.src = canvas.toDataURL("image/jpeg");
-      img.style.display = "block";
       canvas.toBlob(blob => {
         const formData = new FormData();
         formData.append("upload", blob, "foto.jpeg");
@@ -397,15 +308,10 @@
         });
       }, 'image/jpeg');
     }
-
     function detenerCamara() {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         document.getElementById("videoElement").srcObject = null;
-        document.getElementById("videoElement").style.display = "none";
-        document.getElementById("takeFotoBtn").style.display = "none";
-        document.getElementById("stopCameraBtn").style.display = "none";
-        document.getElementById("startCameraBtn").style.display = "inline-block";
       }
     }
   </script>
