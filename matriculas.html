@@ -5,179 +5,132 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reconocimiento de Matrículas Italianas con IA</title>
   <style>
-    
-    /* Estilos Generales y Reseteo */
     body {
-      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; /* Fuentes más modernas y limpias */
-      background: linear-gradient(to right, #ece9e6, #ffffff); /* Degradado suave de fondo */
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+      background: linear-gradient(to right, #ece9e6, #ffffff);
       color: #242121;
       padding: 20px;
       margin: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh; /* Ocupa al menos el alto de la vista */
+      min-height: 100vh;
     }
-
-    /* Contenedor Principal (opcional, pero ayuda a centrar) */
     .container {
         max-width: 700px;
         width: 100%;
         background-color: #fff;
         padding: 30px;
         border-radius: 12px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada pero suave */
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         margin-top: 20px;
-        box-sizing: border-box; /* Incluir padding en el ancho */
+        box-sizing: border-box;
     }
-
     h1, h2 {
-      color: #b71c1c; /* Rojo más profundo para los títulos */
+      color: #b71c1c;
       margin-bottom: 20px;
-      font-weight: 600; /* Un poco más de peso */
+      font-weight: 600;
       text-align: center;
     }
-
     h1 {
         font-size: 2.2em;
-        letter-spacing: 0.02em; /* Ligero espaciado para H1 */
+        letter-spacing: 0.02em;
     }
-
     h2 {
         font-size: 1.6em;
-        border-bottom: 2px solid #eee; /* Línea sutil bajo H2 */
+        border-bottom: 2px solid #eee;
         padding-bottom: 10px;
         margin-top: 30px;
-        color: #d32f2f; /* Rojo ligeramente más claro para H2 */
+        color: #d32f2f;
     }
-
     p {
         margin-bottom: 15px;
         line-height: 1.6;
         color: #555;
     }
-
-    /* Estilos de Botones */
     button {
       padding: 12px 25px;
-      background: #e53935; /* Rojo vibrante */
+      background: #e53935;
       color: white;
       border: none;
-      border-radius: 8px; /* Bordes más suaves */
+      border-radius: 8px;
       cursor: pointer;
       font-size: 1.1em;
       font-weight: 500;
-      transition: background-color 0.3s ease, transform 0.2s ease; /* Transiciones suaves */
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra para botones */
-      margin: 10px 5px; /* Espaciado entre botones */
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      margin: 10px 5px;
     }
-
     button:hover {
-      background: #c62828; /* Rojo más oscuro al pasar el ratón */
-      transform: translateY(-2px); /* Efecto de "levantamiento" */
+      background: #c62828;
+      transform: translateY(-2px);
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
     }
-
     button:active {
-        transform: translateY(0); /* Efecto de "presión" */
+        transform: translateY(0);
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-
-    /* Estilos de Input File */
-    input[type="file"] {
-      display: block; /* Cada input en su propia línea */
-      margin: 20px auto; /* Centrar y dar espacio */
-      padding: 12px 15px;
-      border: 2px dashed #ccc; /* Borde punteado para indicar zona de subida */
-      border-radius: 8px;
-      background-color: #f9f9f9;
-      font-size: 1em;
-      color: #666;
-      width: calc(100% - 40px); /* Ancho adaptable */
-      max-width: 400px;
-      cursor: pointer;
-      transition: border-color 0.3s ease, background-color 0.3s ease;
-    }
-
-    input[type="file"]:hover {
-        border-color: #e53935; /* Borde rojo al pasar el ratón */
-        background-color: #ffebee; /* Fondo más claro */
-    }
-
-    /* Contenedores de Video y Canvas */
     #videoElement {
       width: 100%;
       max-width: 500px;
       height: auto;
       border-radius: 8px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      background-color: #000; /* Fondo negro para el video */
-      display: block; /* Evita espacios extra */
+      background-color: #000;
+      display: block;
       margin: 20px auto;
     }
-
     #canvasElement {
-        display: none; /* Mantener oculto */
+        display: none;
     }
-
-    /* Sección de Resultado */
     #resultado {
       margin-top: 30px;
       padding: 25px;
       background: #ffffff;
       border-radius: 12px;
       box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-      width: calc(100% - 60px); /* Ajuste de ancho */
+      width: calc(100% - 60px);
       max-width: 500px;
       text-align: left;
-      border-left: 5px solid #d32f2f; /* Barra lateral de color */
+      border-left: 5px solid #d32f2f;
     }
-
     #resultado h3 {
         color: #b71c1c;
         margin-top: 0;
         margin-bottom: 15px;
         font-size: 1.3em;
     }
-
     #resultado p {
         margin: 10px 0;
         font-size: 1.1em;
         color: #444;
     }
-
     #resultado strong {
-        color: #d32f2f; /* Color para las matrículas y claves de info */
+        color: #d32f2f;
     }
-
     .info-list {
       list-style: none;
       padding: 0;
       margin-top: 15px;
     }
-
     .info-list li {
       margin-bottom: 8px;
       padding-left: 10px;
       position: relative;
     }
-
     .info-list li::before {
-      content: '•'; /* Punto elegante para la lista */
+      content: '•';
       color: #e53935;
       position: absolute;
       left: 0;
       font-size: 1.2em;
       line-height: 1;
     }
-
     .info-list strong {
       display: inline-block;
-      min-width: 150px; /* Asegura alineación si las etiquetas son largas */
+      min-width: 150px;
       color: #333;
     }
-
-    /* Mensajes de Estado */
     .error {
       color: #d32f2f;
       font-weight: bold;
@@ -186,7 +139,6 @@
       border-radius: 5px;
       border: 1px solid #d32f2f;
     }
-
     .success {
       color: #28a745;
       font-weight: bold;
@@ -195,8 +147,6 @@
       border-radius: 5px;
       border: 1px solid #28a745;
     }
-
-    /* Línea divisoria */
     hr {
         border: 0;
         height: 1px;
@@ -208,58 +158,58 @@
   </style>
 </head>
 <body>
-  <h1>📸 Lector de Matrículas Italianas (IA)</h1>
+  <div class="container">
+    <h1>📸 Lector de Matrículas Italianas (IA)</h1>
+    <p></p>
+    <input type="file" id="uploadImage" accept="image/*" />
+    <button onclick="enviarImagen()">Reconocer Matrícula</button>
 
-  <p>Sube tu base de datos (CSV o JSON):</p>
-  <input type="file" id="dbInput" accept=".json, .csv" />
-  <p>Luego sube o toma la imagen de la matrícula:</p>
-  <input type="file" id="uploadImage" accept="image/*" />
-  <button onclick="enviarImagen()">Reconocer Matrícula</button>
-
-  <h2>🎥 Cámara</h2>
-  <button onclick="iniciarCamara()">Iniciar Cámara</button>
-  <video id="videoElement" autoplay style="width:100%; max-width:500px;"></video>
-  <button onclick="tomarFoto()">📸 Tomar Foto</button>
-  <button onclick="detenerCamara()">Detener Cámara</button>
-  <canvas id="canvasElement" style="display:none;"></canvas>
-
-  <div id="resultado"></div>
+    <h2>🎥 Cámara</h2>
+    <button onclick="iniciarCamara()">Iniciar Cámara</button>
+    <video id="videoElement" autoplay style="width:100%; max-width:500px;"></video>
+    <button onclick="tomarFoto()">📸 Tomar Foto</button>
+    <button onclick="detenerCamara()">Detener Cámara</button>
+    <canvas id="canvasElement" style="display:none;"></canvas>
+    <div id="resultado"></div>
+  </div>
 
   <script>
+    // Google Sheets link:
+    // https://docs.google.com/spreadsheets/d/e/2PACX-1vTZNSWW64H8RLMspKFvoH6EtUWmSQw-dGJ8dJL70iJb95Xl7aB2JSBF8FlpeKKr3TlIwW01BCWaOftw/pubhtml
+    // Usamos el ID público de sheets (publicado como web):
+    const SHEET_ID = "2PACX-1vTZNSWW64H8RLMspKFvoH6EtUWmSQw-dGJ8dJL70iJb95Xl7aB2JSBF8FlpeKKr3TlIwW01BCWaOftw";
+    const SHEET_GID = "0"; // Normalmente la primera hoja es gid=0
     const API_TOKEN = "123dd249332b4bdc8f555bbdf036d316ad9083d1";
     let dbVehiculos = [];
 
-    // 📄 Cargar archivo CSV o JSON
-    document.getElementById("dbInput").addEventListener("change", function (event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-
-      reader.onload = function (e) {
-        const content = e.target.result;
-        if (file.name.endsWith(".json")) {
-          dbVehiculos = JSON.parse(content);
-        } else if (file.name.endsWith(".csv")) {
-          dbVehiculos = parseCSV(content);
-        }
-        console.log("Base de datos cargada:", dbVehiculos);
-      };
-
-      reader.readAsText(file);
-    });
-
-    // 📄 Convertir CSV a JSON
-    function parseCSV(csv) {
-      const lines = csv.trim().split("\n");
-      const headers = lines[1].split(","); // La fila real de encabezado está en la línea 2
-      return lines.slice(2).map(line => {
-        const values = line.split(",");
-        let obj = {};
-        headers.forEach((h, i) => {
-          obj[h.trim()] = values[i]?.trim();
+    // --- Leer datos de Google Sheets PUBLICADO ---
+    function fetchVehiculosDesdeGoogleSheets(callback) {
+      // Usamos el endpoint de publicación en formato CSV
+      // https://docs.google.com/spreadsheets/d/e/[ID]/pub?output=csv
+      const url = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`;
+      fetch(url)
+        .then(res => res.text())
+        .then(text => {
+          const lines = text.trim().split("\n");
+          const headers = lines[0].split(",").map(h => h.trim());
+          const data = lines.slice(1).map(line => {
+            const values = line.split(",");
+            let obj = {};
+            headers.forEach((h, i) => {
+              obj[h] = values[i] ? values[i].trim() : "";
+            });
+            return obj;
+          });
+          dbVehiculos = data;
+          if (callback) callback(data);
+        })
+        .catch(err => {
+          document.getElementById("resultado").innerHTML = "<p class='error'>❌ Error al cargar la base de datos desde Google Sheets.</p>";
         });
-        return obj;
-      });
     }
+
+    // Carga la base de datos al inicio
+    fetchVehiculosDesdeGoogleSheets();
 
     function enviarImagen() {
       const input = document.getElementById("uploadImage");
@@ -267,18 +217,13 @@
         mostrarMensaje("⚠️ Selecciona una imagen primero.", true);
         return;
       }
-
       const formData = new FormData();
       formData.append("upload", input.files[0]);
       formData.append("country", "it");
-
       mostrarMensaje("⏳ Procesando imagen...");
-
       fetch("https://api.platerecognizer.com/v1/plate-reader/", {
         method: "POST",
-        headers: {
-          Authorization: `Token ${API_TOKEN}`
-        },
+        headers: { Authorization: `Token ${API_TOKEN}` },
         body: formData
       })
       .then(res => res.json())
@@ -292,13 +237,17 @@
         }
       })
       .catch(err => {
-        console.error(err);
         mostrarMensaje("⚠️ Error al procesar la imagen.", true);
       });
     }
 
     function buscarVehiculo(placa) {
-      const vehiculo = dbVehiculos.find(v => (v["MATRÍCULA"] || v["Matricula"] || "").toUpperCase() === placa);
+      // Busca por MATRÍCULA, Matricula o matricula (insensible a tildes, mayúsculas)
+      const keys = Object.keys(dbVehiculos[0] || {});
+      const matriculaKey = keys.find(k => k.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === "matricula");
+      const vehiculo = dbVehiculos.find(v =>
+        (v[matriculaKey] || "").toUpperCase() === placa
+      );
       if (vehiculo) {
         let html = "<h3>Información del Vehículo:</h3><ul class='info-list'>";
         for (const key in vehiculo) {
@@ -319,7 +268,7 @@
     let stream;
     async function iniciarCamara() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
         document.getElementById("videoElement").srcObject = stream;
       } catch (err) {
         mostrarMensaje("❌ No se pudo acceder a la cámara.", true);
@@ -337,7 +286,6 @@
         formData.append("upload", blob, "foto.jpeg");
         formData.append("country", "it");
         mostrarMensaje("⏳ Procesando imagen...");
-
         fetch("https://api.platerecognizer.com/v1/plate-reader/", {
           method: "POST",
           headers: { Authorization: `Token ${API_TOKEN}` },
