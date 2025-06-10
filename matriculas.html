@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Reconocimiento de Matrículas Italianas con IA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reconocimiento de Matrículas Italianas con IA</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -32,10 +33,10 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       width: 80%;
       max-width: 500px;
+      text-align: left;
     }
     .error { color: #c62828; font-weight: bold; }
-
-    /* Estilos para la cámara */
+    .success { color: #28a745; font-weight: bold; }
     #videoContainer {
       width: 100%;
       max-width: 500px;
@@ -47,10 +48,7 @@
     #videoElement {
       width: 100%;
       height: auto;
-      display: block; /* Para eliminar el espacio extra debajo del video */
-    }
-    #canvasElement {
-      display: none; /* Ocultar el canvas inicialmente */
+      display: block;
     }
     #cameraControls {
       display: flex;
@@ -58,12 +56,30 @@
       gap: 10px;
       margin-top: 10px;
     }
+    .info-list {
+      list-style: none;
+      padding: 0;
+    }
+    .info-list li {
+      margin-bottom: 5px;
+    }
+    .info-list strong {
+      display: inline-block;
+      min-width: 120px;
+    }
   </style>
 </head>
 <body>
   <h1>📸 Lector de Matrículas Italianas (con IA)</h1>
-  <p>Sube una foto o usa la cámara para analizar una matrícula italiana:</p>
 
+  <h2>📂 Subir base de datos personalizada</h2>
+  <p>Sube tu archivo CSV o JSON con información de matrículas:</p>
+  <input type="file" id="csvInput" accept=".csv">
+  <input type="file" id="jsonInput" accept=".json">
+
+  <hr style="width: 80%; margin: 20px 0;">
+
+  <h2>📁 Subir una imagen</h2>
   <input type="file" id="uploadImage" accept="image/*">
   <button onclick="enviarImagen('upload')">Reconocer Matrícula (Archivo)</button>
 
@@ -78,30 +94,65 @@
     <button onclick="tomarFoto()" id="takeFotoBtn" style="display: none;">Tomar Foto</button>
     <button onclick="detenerCamara()" id="stopCameraBtn" style="display: none;">Detener Cámara</button>
   </div>
-  <canvas id="canvasElement" style="display: none;"></canvas> <div id="resultado"></div>
+  <canvas id="canvasElement" style="display: none;"></canvas>
+
+  <div id="resultado"></div>
 
   <script>
-    // **IMPORTANTE**: Reemplaza esto con tu propio token de Plate Recognizer.
-    // Este token es un ejemplo y no funcionará.
-    const API_TOKEN = "123dd249332b4bdc8f555bbdf036d316ad9083d1";
+    const API_TOKEN = "123dd249332b4bdc8f555bbdf036d316ad9083d1"; // Reemplaza con tu token real
 
     const video = document.getElementById('videoElement');
     const canvas = document.getElementById('canvasElement');
     const takeFotoBtn = document.getElementById('takeFotoBtn');
     const stopCameraBtn = document.getElementById('stopCameraBtn');
     const resultadoDiv = document.getElementById('resultado');
-    let stream; // Para almacenar el stream de la cámara
+    let stream;
+    let datosVehiculos = [];
+
+    document.getElementById("csvInput").addEventListener("change", async function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      const text = await file.text();
+      const rows = text.split('\n').map(row => row.trim()).filter(Boolean);
+      const headers = rows[0].split(',').map(h => h.trim());
+      datosVehiculos = rows.slice(1).map(row => {
+        const values = row.split(',').map(v => v.trim());
+        const obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = values[index] || '';
+        });
+        return obj;
+      });
+
+      console.log("CSV cargado:", datosVehiculos);
+      resultadoDiv.innerHTML = "<p class='success'>✅ Archivo CSV cargado correctamente.</p>";
+    });
+
+    document.getElementById("jsonInput").addEventListener("change", async function () {
+      const file = this.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        datosVehiculos = JSON.parse(text);
+        console.log("JSON cargado:", datosVehiculos);
+        resultadoDiv.innerHTML = "<p class='success'>✅ Archivo JSON cargado correctamente.</p>";
+      } catch (error) {
+        console.error("Error al leer JSON:", error);
+        resultadoDiv.innerHTML = "<p class='error'>❌ Error al procesar el archivo JSON.</p>";
+      }
+    });
 
     async function iniciarCamara() {
       resultadoDiv.innerHTML = '<p>Iniciando cámara...</p>';
       try {
-        // Pedir permiso para la cámara, preferiendo la trasera (environment)
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
         video.srcObject = stream;
         video.style.display = 'block';
         takeFotoBtn.style.display = 'inline-block';
         stopCameraBtn.style.display = 'inline-block';
-        resultadoDiv.innerHTML = ''; // Limpiar mensaje de inicio
+        resultadoDiv.innerHTML = '';
       } catch (err) {
         console.error("Error al acceder a la cámara: ", err);
         resultadoDiv.innerHTML = '<p class="error">❌ No se pudo iniciar la cámara. Asegúrate de dar permisos.</p>';
@@ -118,15 +169,14 @@
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Convertir la imagen del canvas a un Blob (equivalente a un archivo)
       canvas.toBlob(blob => {
         enviarImagen('camera', blob);
-      }, 'image/jpeg'); // Puedes elegir 'image/png' si prefieres
+      }, 'image/jpeg', 0.9);
     }
 
     function detenerCamara() {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop()); // Detener todas las pistas (video, audio si hubiera)
+        stream.getTracks().forEach(track => track.stop());
         video.srcObject = null;
         video.style.display = 'none';
         takeFotoBtn.style.display = 'none';
@@ -134,7 +184,6 @@
         resultadoDiv.innerHTML = '<p>Cámara detenida.</p>';
       }
     }
-
 
     function enviarImagen(source, blob = null) {
       const formData = new FormData();
@@ -148,15 +197,13 @@
         }
         formData.append("upload", input.files[0]);
       } else if (source === 'camera' && blob) {
-        formData.append("upload", blob, "camera_capture.jpeg"); // El tercer argumento es el nombre del archivo
+        formData.append("upload", blob, "camera_capture.jpeg");
       } else {
         resultado.innerHTML = '<p class="error">⚠️ Error en la fuente de la imagen.</p>';
         return;
       }
 
-      // Añadir el país para filtrar la detección a matrículas italianas
-      formData.append("country", "it"); // "it" para Italia
-
+      formData.append("country", "it");
       resultado.innerHTML = "<p>⏳ Procesando imagen...</p>";
 
       fetch("https://api.platerecognizer.com/v1/plate-reader/", {
@@ -170,10 +217,9 @@
       .then(data => {
         console.log(data);
         if (data.results && data.results.length > 0) {
-          const placa = data.results[0].plate.toUpperCase();
-          resultado.innerHTML = `<h2>✅ Matrícula detectada:</h2><p style='font-size:20px'><strong>${placa}</strong></p>`;
-          // Aquí llamarías a una función para buscar en tu "base de datos" de Excel
-          // buscarInformacionMatricula(placa);
+          const placaDetectada = data.results[0].plate.toUpperCase();
+          resultado.innerHTML = `<h2>✅ Matrícula detectada:</h2><p style='font-size:20px'><strong>${placaDetectada}</strong></p>`;
+          buscarInformacionVehiculo(placaDetectada);
         } else {
           resultado.innerHTML = '<p class="error">❌ No se detectó ninguna matrícula en la imagen.</p>';
         }
@@ -184,7 +230,25 @@
       });
     }
 
-    // Asegurarse de detener la cámara si el usuario navega fuera de la página
+    function buscarInformacionVehiculo(placa) {
+      const infoVehiculo = datosVehiculos.find(vehiculo =>
+        vehiculo.Matricula && vehiculo.Matricula.toUpperCase() === placa
+      );
+
+      if (infoVehiculo) {
+        let htmlInfo = `<h3 class="success">Información del Vehículo:</h3><ul class="info-list">`;
+        for (const key in infoVehiculo) {
+          if (infoVehiculo.hasOwnProperty(key)) {
+            htmlInfo += `<li><strong>${key.replace(/([A-Z])/g, ' $1').trim()}:</strong> ${infoVehiculo[key]}</li>`;
+          }
+        }
+        htmlInfo += `</ul>`;
+        resultadoDiv.innerHTML += htmlInfo;
+      } else {
+        resultadoDiv.innerHTML += '<p class="error">🚫 No se encontró información para esta matrícula en la base de datos.</p>';
+      }
+    }
+
     window.addEventListener('beforeunload', detenerCamara);
   </script>
 </body>
