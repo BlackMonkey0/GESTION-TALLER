@@ -1,210 +1,278 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reconocimiento de Matrículas Italianas con IA</title>
   <style>
+    
+    /* Estilos Generales y Reseteo */
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      color: #333;
+      font-family: 'Segoe UI', 'Roboto', Arial, sans-serif; /* Fuentes más modernas y limpias */
+      background: linear-gradient(to right, #ece9e6, #ffffff); /* Degradado suave de fondo */
+      color: #242121;
       padding: 20px;
+      margin: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
+      min-height: 100vh; /* Ocupa al menos el alto de la vista */
+    }
+
+    /* Contenedor Principal (opcional, pero ayuda a centrar) */
+    .container {
+        max-width: 700px;
+        width: 100%;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* Sombra más pronunciada pero suave */
+        margin-top: 20px;
+        box-sizing: border-box; /* Incluir padding en el ancho */
+    }
+
+    h1, h2 {
+      color: #b71c1c; /* Rojo más profundo para los títulos */
+      margin-bottom: 20px;
+      font-weight: 600; /* Un poco más de peso */
       text-align: center;
     }
-    h1, h2 { color: #c62828; }
-    input, button, img, video, canvas { margin: 10px 0; }
-    input[type="file"] {
-      padding: 10px; font-size: 16px;
-      border: 1px solid #ccc; border-radius: 5px;
+
+    h1 {
+        font-size: 2.2em;
+        letter-spacing: 0.02em; /* Ligero espaciado para H1 */
     }
+
+    h2 {
+        font-size: 1.6em;
+        border-bottom: 2px solid #eee; /* Línea sutil bajo H2 */
+        padding-bottom: 10px;
+        margin-top: 30px;
+        color: #d32f2f; /* Rojo ligeramente más claro para H2 */
+    }
+
+    p {
+        margin-bottom: 15px;
+        line-height: 1.6;
+        color: #555;
+    }
+
+    /* Estilos de Botones */
     button {
-      padding: 10px 20px; background: #e53935;
-      color: white; border: none; border-radius: 5px;
+      padding: 12px 25px;
+      background: #e53935; /* Rojo vibrante */
+      color: white;
+      border: none;
+      border-radius: 8px; /* Bordes más suaves */
       cursor: pointer;
+      font-size: 1.1em;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s ease; /* Transiciones suaves */
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Sombra para botones */
+      margin: 10px 5px; /* Espaciado entre botones */
     }
-    button:hover { background: #c62828; }
-    #resultado {
-      margin-top: 20px; padding: 15px;
-      background: #fff; border-radius: 5px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      width: 80%;
-      max-width: 500px;
-      text-align: left;
+
+    button:hover {
+      background: #c62828; /* Rojo más oscuro al pasar el ratón */
+      transform: translateY(-2px); /* Efecto de "levantamiento" */
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
     }
-    .error { color: #c62828; font-weight: bold; }
-    .success { color: #28a745; font-weight: bold; }
-    #videoContainer {
-      width: 100%;
-      max-width: 500px;
-      margin: 10px auto;
-      border: 1px solid #ddd;
-      background-color: black;
-      position: relative;
+
+    button:active {
+        transform: translateY(0); /* Efecto de "presión" */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
+
+    /* Estilos de Input File */
+    input[type="file"] {
+      display: block; /* Cada input en su propia línea */
+      margin: 20px auto; /* Centrar y dar espacio */
+      padding: 12px 15px;
+      border: 2px dashed #ccc; /* Borde punteado para indicar zona de subida */
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      font-size: 1em;
+      color: #666;
+      width: calc(100% - 40px); /* Ancho adaptable */
+      max-width: 400px;
+      cursor: pointer;
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    input[type="file"]:hover {
+        border-color: #e53935; /* Borde rojo al pasar el ratón */
+        background-color: #ffebee; /* Fondo más claro */
+    }
+
+    /* Contenedores de Video y Canvas */
     #videoElement {
       width: 100%;
+      max-width: 500px;
       height: auto;
-      display: block;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      background-color: #000; /* Fondo negro para el video */
+      display: block; /* Evita espacios extra */
+      margin: 20px auto;
     }
-    #cameraControls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 10px;
+
+    #canvasElement {
+        display: none; /* Mantener oculto */
     }
+
+    /* Sección de Resultado */
+    #resultado {
+      margin-top: 30px;
+      padding: 25px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      width: calc(100% - 60px); /* Ajuste de ancho */
+      max-width: 500px;
+      text-align: left;
+      border-left: 5px solid #d32f2f; /* Barra lateral de color */
+    }
+
+    #resultado h3 {
+        color: #b71c1c;
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+    }
+
+    #resultado p {
+        margin: 10px 0;
+        font-size: 1.1em;
+        color: #444;
+    }
+
+    #resultado strong {
+        color: #d32f2f; /* Color para las matrículas y claves de info */
+    }
+
     .info-list {
       list-style: none;
       padding: 0;
+      margin-top: 15px;
     }
+
     .info-list li {
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+      padding-left: 10px;
+      position: relative;
     }
+
+    .info-list li::before {
+      content: '•'; /* Punto elegante para la lista */
+      color: #e53935;
+      position: absolute;
+      left: 0;
+      font-size: 1.2em;
+      line-height: 1;
+    }
+
     .info-list strong {
       display: inline-block;
-      min-width: 120px;
+      min-width: 150px; /* Asegura alineación si las etiquetas son largas */
+      color: #333;
+    }
+
+    /* Mensajes de Estado */
+    .error {
+      color: #d32f2f;
+      font-weight: bold;
+      background-color: #ffebee;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #d32f2f;
+    }
+
+    .success {
+      color: #28a745;
+      font-weight: bold;
+      background-color: #e8f5e9;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #28a745;
+    }
+
+    /* Línea divisoria */
+    hr {
+        border: 0;
+        height: 1px;
+        background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+        margin: 40px 0;
+        width: 80%;
+        max-width: 600px;
     }
   </style>
 </head>
 <body>
-  <h1>📸 Lector de Matrículas Italianas (con IA)</h1>
+  <h1>📸 Lector de Matrículas Italianas (IA)</h1>
 
-  <h2>📂 Subir base de datos personalizada</h2>
-  <p>Sube tu archivo CSV o JSON con información de matrículas:</p>
-  <input type="file" id="csvInput" accept=".csv">
-  <input type="file" id="jsonInput" accept=".json">
+  <p>Sube tu base de datos (CSV o JSON):</p>
+  <input type="file" id="dbInput" accept=".json, .csv" />
+  <p>Luego sube o toma la imagen de la matrícula:</p>
+  <input type="file" id="uploadImage" accept="image/*" />
+  <button onclick="enviarImagen()">Reconocer Matrícula</button>
 
-  <hr style="width: 80%; margin: 20px 0;">
-
-  <h2>📁 Subir una imagen</h2>
-  <input type="file" id="uploadImage" accept="image/*">
-  <button onclick="enviarImagen('upload')">Reconocer Matrícula (Archivo)</button>
-
-  <hr style="width: 80%; margin: 20px 0;">
-
-  <h2>🎥 Usar Cámara</h2>
+  <h2>🎥 Cámara</h2>
   <button onclick="iniciarCamara()">Iniciar Cámara</button>
-  <div id="videoContainer">
-    <video id="videoElement" autoplay></video>
-  </div>
-  <div id="cameraControls">
-    <button onclick="tomarFoto()" id="takeFotoBtn" style="display: none;">Tomar Foto</button>
-    <button onclick="detenerCamara()" id="stopCameraBtn" style="display: none;">Detener Cámara</button>
-  </div>
-  <canvas id="canvasElement" style="display: none;"></canvas>
+  <video id="videoElement" autoplay style="width:100%; max-width:500px;"></video>
+  <button onclick="tomarFoto()">📸 Tomar Foto</button>
+  <button onclick="detenerCamara()">Detener Cámara</button>
+  <canvas id="canvasElement" style="display:none;"></canvas>
 
   <div id="resultado"></div>
 
   <script>
-    const API_TOKEN = "123dd249332b4bdc8f555bbdf036d316ad9083d1"; // Reemplaza con tu token real
+    const API_TOKEN = "123dd249332b4bdc8f555bbdf036d316ad9083d1";
+    let dbVehiculos = [];
 
-    const video = document.getElementById('videoElement');
-    const canvas = document.getElementById('canvasElement');
-    const takeFotoBtn = document.getElementById('takeFotoBtn');
-    const stopCameraBtn = document.getElementById('stopCameraBtn');
-    const resultadoDiv = document.getElementById('resultado');
-    let stream;
-    let datosVehiculos = [];
+    // 📄 Cargar archivo CSV o JSON
+    document.getElementById("dbInput").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
 
-    document.getElementById("csvInput").addEventListener("change", async function () {
-      const file = this.files[0];
-      if (!file) return;
+      reader.onload = function (e) {
+        const content = e.target.result;
+        if (file.name.endsWith(".json")) {
+          dbVehiculos = JSON.parse(content);
+        } else if (file.name.endsWith(".csv")) {
+          dbVehiculos = parseCSV(content);
+        }
+        console.log("Base de datos cargada:", dbVehiculos);
+      };
 
-      const text = await file.text();
-      const rows = text.split('\n').map(row => row.trim()).filter(Boolean);
-      const headers = rows[0].split(',').map(h => h.trim());
-      datosVehiculos = rows.slice(1).map(row => {
-        const values = row.split(',').map(v => v.trim());
-        const obj = {};
-        headers.forEach((header, index) => {
-          obj[header] = values[index] || '';
+      reader.readAsText(file);
+    });
+
+    // 📄 Convertir CSV a JSON
+    function parseCSV(csv) {
+      const lines = csv.trim().split("\n");
+      const headers = lines[1].split(","); // La fila real de encabezado está en la línea 2
+      return lines.slice(2).map(line => {
+        const values = line.split(",");
+        let obj = {};
+        headers.forEach((h, i) => {
+          obj[h.trim()] = values[i]?.trim();
         });
         return obj;
       });
-
-      console.log("CSV cargado:", datosVehiculos);
-      resultadoDiv.innerHTML = "<p class='success'>✅ Archivo CSV cargado correctamente.</p>";
-    });
-
-    document.getElementById("jsonInput").addEventListener("change", async function () {
-      const file = this.files[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        datosVehiculos = JSON.parse(text);
-        console.log("JSON cargado:", datosVehiculos);
-        resultadoDiv.innerHTML = "<p class='success'>✅ Archivo JSON cargado correctamente.</p>";
-      } catch (error) {
-        console.error("Error al leer JSON:", error);
-        resultadoDiv.innerHTML = "<p class='error'>❌ Error al procesar el archivo JSON.</p>";
-      }
-    });
-
-    async function iniciarCamara() {
-      resultadoDiv.innerHTML = '<p>Iniciando cámara...</p>';
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
-        video.srcObject = stream;
-        video.style.display = 'block';
-        takeFotoBtn.style.display = 'inline-block';
-        stopCameraBtn.style.display = 'inline-block';
-        resultadoDiv.innerHTML = '';
-      } catch (err) {
-        console.error("Error al acceder a la cámara: ", err);
-        resultadoDiv.innerHTML = '<p class="error">❌ No se pudo iniciar la cámara. Asegúrate de dar permisos.</p>';
-      }
     }
 
-    function tomarFoto() {
-      if (!stream) {
-        resultadoDiv.innerHTML = '<p class="error">⚠️ La cámara no está activa.</p>';
+    function enviarImagen() {
+      const input = document.getElementById("uploadImage");
+      if (!input.files.length) {
+        mostrarMensaje("⚠️ Selecciona una imagen primero.", true);
         return;
       }
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      canvas.toBlob(blob => {
-        enviarImagen('camera', blob);
-      }, 'image/jpeg', 0.9);
-    }
-
-    function detenerCamara() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
-        video.style.display = 'none';
-        takeFotoBtn.style.display = 'none';
-        stopCameraBtn.style.display = 'none';
-        resultadoDiv.innerHTML = '<p>Cámara detenida.</p>';
-      }
-    }
-
-    function enviarImagen(source, blob = null) {
       const formData = new FormData();
-      const resultado = document.getElementById("resultado");
-
-      if (source === 'upload') {
-        const input = document.getElementById("uploadImage");
-        if (!input.files.length) {
-          resultado.innerHTML = '<p class="error">⚠️ Selecciona una imagen primero.</p>';
-          return;
-        }
-        formData.append("upload", input.files[0]);
-      } else if (source === 'camera' && blob) {
-        formData.append("upload", blob, "camera_capture.jpeg");
-      } else {
-        resultado.innerHTML = '<p class="error">⚠️ Error en la fuente de la imagen.</p>';
-        return;
-      }
-
+      formData.append("upload", input.files[0]);
       formData.append("country", "it");
-      resultado.innerHTML = "<p>⏳ Procesando imagen...</p>";
+
+      mostrarMensaje("⏳ Procesando imagen...");
 
       fetch("https://api.platerecognizer.com/v1/plate-reader/", {
         method: "POST",
@@ -215,41 +283,85 @@
       })
       .then(res => res.json())
       .then(data => {
-        console.log(data);
-        if (data.results && data.results.length > 0) {
-          const placaDetectada = data.results[0].plate.toUpperCase();
-          resultado.innerHTML = `<h2>✅ Matrícula detectada:</h2><p style='font-size:20px'><strong>${placaDetectada}</strong></p>`;
-          buscarInformacionVehiculo(placaDetectada);
+        const placa = data.results?.[0]?.plate?.toUpperCase();
+        if (placa) {
+          mostrarMensaje(`✅ Matrícula detectada: <strong>${placa}</strong>`);
+          buscarVehiculo(placa);
         } else {
-          resultado.innerHTML = '<p class="error">❌ No se detectó ninguna matrícula en la imagen.</p>';
+          mostrarMensaje("❌ No se detectó ninguna matrícula en la imagen.", true);
         }
       })
       .catch(err => {
         console.error(err);
-        resultado.innerHTML = '<p class="error">⚠️ Error al procesar la imagen.</p>';
+        mostrarMensaje("⚠️ Error al procesar la imagen.", true);
       });
     }
 
-    function buscarInformacionVehiculo(placa) {
-      const infoVehiculo = datosVehiculos.find(vehiculo =>
-        vehiculo.Matricula && vehiculo.Matricula.toUpperCase() === placa
-      );
-
-      if (infoVehiculo) {
-        let htmlInfo = `<h3 class="success">Información del Vehículo:</h3><ul class="info-list">`;
-        for (const key in infoVehiculo) {
-          if (infoVehiculo.hasOwnProperty(key)) {
-            htmlInfo += `<li><strong>${key.replace(/([A-Z])/g, ' $1').trim()}:</strong> ${infoVehiculo[key]}</li>`;
-          }
+    function buscarVehiculo(placa) {
+      const vehiculo = dbVehiculos.find(v => (v["MATRÍCULA"] || v["Matricula"] || "").toUpperCase() === placa);
+      if (vehiculo) {
+        let html = "<h3>Información del Vehículo:</h3><ul class='info-list'>";
+        for (const key in vehiculo) {
+          html += `<li><strong>${key}:</strong> ${vehiculo[key]}</li>`;
         }
-        htmlInfo += `</ul>`;
-        resultadoDiv.innerHTML += htmlInfo;
+        html += "</ul>";
+        document.getElementById("resultado").innerHTML += html;
       } else {
-        resultadoDiv.innerHTML += '<p class="error">🚫 No se encontró información para esta matrícula en la base de datos.</p>';
+        document.getElementById("resultado").innerHTML += "<p>🚫 Matrícula no encontrada en la base de datos.</p>";
       }
     }
 
-    window.addEventListener('beforeunload', detenerCamara);
+    function mostrarMensaje(msg, error = false) {
+      document.getElementById("resultado").innerHTML = `<p style="color:${error ? 'red' : 'black'}">${msg}</p>`;
+    }
+
+    // 📷 Cámara
+    let stream;
+    async function iniciarCamara() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } });
+        document.getElementById("videoElement").srcObject = stream;
+      } catch (err) {
+        mostrarMensaje("❌ No se pudo acceder a la cámara.", true);
+      }
+    }
+
+    function tomarFoto() {
+      const video = document.getElementById("videoElement");
+      const canvas = document.getElementById("canvasElement");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append("upload", blob, "foto.jpeg");
+        formData.append("country", "it");
+        mostrarMensaje("⏳ Procesando imagen...");
+
+        fetch("https://api.platerecognizer.com/v1/plate-reader/", {
+          method: "POST",
+          headers: { Authorization: `Token ${API_TOKEN}` },
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          const placa = data.results?.[0]?.plate?.toUpperCase();
+          if (placa) {
+            mostrarMensaje(`✅ Matrícula detectada: <strong>${placa}</strong>`);
+            buscarVehiculo(placa);
+          } else {
+            mostrarMensaje("❌ No se detectó ninguna matrícula.", true);
+          }
+        });
+      }, 'image/jpeg');
+    }
+
+    function detenerCamara() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        document.getElementById("videoElement").srcObject = null;
+      }
+    }
   </script>
 </body>
 </html>
